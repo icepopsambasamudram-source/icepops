@@ -59,34 +59,52 @@ def get_staff_names():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# NEW: Aggregation route to calculate outstanding dues per staff member
+@treats_bp.route('/api/treats/summary', methods=['GET'])
+def get_treats_summary():
+    try:
+        pipeline = [
+            # Only calculate costs for items marked as "Staff/Owner Treat"
+            {"$match": {"reason": "Staff/Owner Treat"}},
+            {"$group": {
+                "_id": "$staff_name",
+                "total_owed": {"$sum": {"$multiply": ["$units_consumed", "$unit_cost_val"]}},
+                "total_items": {"$sum": "$units_consumed"}
+            }},
+            {"$sort": {"total_owed": -1}} # Sort by highest amount owed
+        ]
+        
+        summary = list(db.staff_consumptions.aggregate(pipeline))
+        overall_total = sum(item['total_owed'] for item in summary)
+        
+        return jsonify({
+            "summary": summary,
+            "overall_total": overall_total
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @treats_bp.route('/api/treats', methods=['POST'])
 def log_treat():
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
     data = request.json
-    
-    # Debugging logs to see exactly what the frontend sent
-    print("--- NEW TREAT REQUEST ---")
-    print("Payload Received:", data)
-
     product_id = data.get('product_id')
+    
     try:
         units = int(data.get('units_consumed', 1))
     except ValueError:
-        print("Error: Units consumed is not a valid number.")
         return jsonify({"error": "Invalid quantity provided."}), 400
 
     reason = data.get('reason', 'Staff Treat')
     
     staff_name = data.get('staff_name', '').strip().title()
     if not staff_name:
-        print("Error: Staff name was empty.")
         return jsonify({"error": "Staff name is required"}), 400
     
     success, result = deduct_inventory_for_treat(product_id, units)
     if not success:
-        print(f"Error: Inventory Deduction Failed -> {result}")
         return jsonify({"error": result}), 400
         
     treat_record = {
@@ -100,5 +118,4 @@ def log_treat():
     }
     
     db.staff_consumptions.insert_one(treat_record)
-    print("Success: Treat logged and stock deducted.")
     return jsonify({"message": "Item logged and stock deducted successfully!"}), 201

@@ -26,6 +26,7 @@ async function loadTreatsData() {
 
     loadStaffNames();
     fetchTreatHistory();
+    fetchTreatsSummary(); // NEW: Load financial summaries
 }
 
 async function loadStaffNames() {
@@ -44,6 +45,45 @@ async function loadStaffNames() {
         }
     } catch (err) {
         console.error("Failed to load staff names", err);
+    }
+}
+
+// NEW: Fetch and render the outstanding dues for staff
+async function fetchTreatsSummary() {
+    try {
+        const res = await fetch('/api/treats/summary');
+        if (res.ok) {
+            const data = await res.json();
+            
+            // Update Top Level KPI
+            document.getElementById('overallTreatsTotal').innerText = `₹${data.overall_total.toFixed(2)}`;
+            
+            const container = document.getElementById('staffDuesContainer');
+            container.innerHTML = '';
+            
+            if(data.summary.length === 0) {
+                container.innerHTML = '<div class="col-span-full p-4 text-center text-gray-500 font-bold text-sm">No pending dues.</div>';
+                return;
+            }
+            
+            // Generate a frosted card for each staff member
+            data.summary.forEach(staff => {
+                container.innerHTML += `
+                    <div class="bg-white/80 backdrop-blur-md border border-pink-100 p-5 rounded-2xl shadow-sm flex justify-between items-center hover:shadow-md transition-shadow">
+                        <div>
+                            <h4 class="font-black text-gray-800 text-lg">${staff._id}</h4>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">${staff.total_items} items consumed</p>
+                        </div>
+                        <div class="text-right bg-pink-50 px-4 py-2 rounded-xl border border-pink-100">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Owes</p>
+                            <p class="font-black text-pink-500 text-xl">₹${staff.total_owed.toFixed(2)}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    } catch (err) {
+        console.error("Failed to load treats summary", err);
     }
 }
 
@@ -117,9 +157,8 @@ async function handleTreatSubmission(e) {
         if (response.ok) {
             alert("✅ " + data.message);
             document.getElementById('treatUnits').value = 1;
-            loadTreatsData(); 
+            loadTreatsData(); // Will refresh dropdowns, history, AND the dues summary!
         } else {
-            // This will show exactly why it failed (e.g. "Insufficient Stock")
             alert("⚠️ Error: " + data.error);
         }
     } catch (err) {
