@@ -1,0 +1,111 @@
+<section id="dashboardView" class="h-full flex flex-col w-full relative z-10 p-4 md:p-6 overflow-y-auto no-scrollbar">
+    
+    <!-- Top Toolbar: Date Filters -->
+    <div class="bg-white/40 backdrop-blur-xl p-4 rounded-3xl border border-pink-100 shadow-lg mb-6 flex flex-col xl:flex-row gap-4 items-center justify-between">
+        <div class="flex gap-2 overflow-x-auto no-scrollbar w-full xl:w-auto">
+            <button onclick="setDashFilter('today')" id="btn-today" class="dash-filter-btn px-5 py-2.5 rounded-2xl font-bold text-sm bg-gradient-to-r from-pink-400 to-pink-500 text-white shadow-md shadow-pink-200 whitespace-nowrap transition-all">Today</button>
+            <button onclick="setDashFilter('yesterday')" id="btn-yesterday" class="dash-filter-btn px-5 py-2.5 rounded-2xl font-bold text-sm bg-white/60 text-gray-500 hover:bg-white border border-pink-100 whitespace-nowrap transition-all">Yesterday</button>
+            <button onclick="setDashFilter('week')" id="btn-week" class="dash-filter-btn px-5 py-2.5 rounded-2xl font-bold text-sm bg-white/60 text-gray-500 hover:bg-white border border-pink-100 whitespace-nowrap transition-all">This Week</button>
+            <button onclick="setDashFilter('month')" id="btn-month" class="dash-filter-btn px-5 py-2.5 rounded-2xl font-bold text-sm bg-white/60 text-gray-500 hover:bg-white border border-pink-100 whitespace-nowrap transition-all">This Month</button>
+            <button onclick="setDashFilter('year')" id="btn-year" class="dash-filter-btn px-5 py-2.5 rounded-2xl font-bold text-sm bg-white/60 text-gray-500 hover:bg-white border border-pink-100 whitespace-nowrap transition-all">This Year</button>
+        </div>
+        <div class="flex gap-2 items-center w-full xl:w-auto bg-white/50 p-2 rounded-2xl border border-pink-50">
+            <input type="date" id="dashCustomStart" class="bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-700 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-pink-300">
+            <span class="text-gray-400 font-bold">to</span>
+            <input type="date" id="dashCustomEnd" class="bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-700 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-pink-300">
+            <button onclick="setDashFilter('custom')" class="bg-gray-800 hover:bg-black text-white px-5 py-2 rounded-xl font-bold text-sm transition-colors shadow-sm">Apply</button>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards (Sales) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white/60 backdrop-blur-2xl p-6 rounded-[2rem] border border-pink-100 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-pink-300/30 rounded-full blur-2xl"></div>
+            <p class="text-[11px] font-black uppercase tracking-widest text-gray-500">Sales Revenue</p>
+            <h3 class="text-4xl font-black text-pink-500 mt-2" id="dashMetricRevenue">₹0.00</h3>
+        </div>
+        <div class="bg-white/60 backdrop-blur-2xl p-6 rounded-[2rem] border border-pink-100 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-300/30 rounded-full blur-2xl"></div>
+            <p class="text-[11px] font-black uppercase tracking-widest text-gray-500">Total Orders (Invoices)</p>
+            <h3 class="text-4xl font-black text-gray-800 mt-2" id="dashMetricOrders">0</h3>
+        </div>
+        <div class="bg-white/60 backdrop-blur-2xl p-6 rounded-[2rem] border border-pink-100 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-green-300/30 rounded-full blur-2xl"></div>
+            <p class="text-[11px] font-black uppercase tracking-widest text-gray-500">Items Sold</p>
+            <h3 class="text-4xl font-black text-gray-800 mt-2" id="dashMetricProducts">0</h3>
+        </div>
+    </div>
+
+    <!-- Incoming Stock / Inventory Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white/40 backdrop-blur-xl p-5 rounded-[1.5rem] border border-pink-100 shadow-lg flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Live Inventory Value</p>
+                <h3 class="text-2xl font-black text-emerald-500 mt-1" id="dashInvValue">₹0.00</h3>
+            </div>
+            <div class="text-3xl opacity-80">💸</div>
+        </div>
+        <div class="bg-white/40 backdrop-blur-xl p-5 rounded-[1.5rem] border border-pink-100 shadow-lg flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Total Units In Stock</p>
+                <h3 class="text-2xl font-black text-gray-800 mt-1" id="dashInvItems">0</h3>
+            </div>
+            <div class="text-3xl opacity-80">📦</div>
+        </div>
+        <div class="bg-white/40 backdrop-blur-xl p-5 rounded-[1.5rem] border border-pink-100 shadow-lg flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-gray-500">Low Stock Alerts</p>
+                <h3 class="text-2xl font-black text-red-500 mt-1" id="dashInvLow">0</h3>
+            </div>
+            <div class="text-3xl opacity-80">🚨</div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Sales Trend Line Chart -->
+        <div class="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-pink-100 shadow-xl lg:col-span-2">
+            <h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Revenue Trend</h3>
+            <div class="h-64 w-full">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+        <!-- Payment Methods Pie Chart -->
+        <div class="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-pink-100 shadow-xl">
+            <h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Payment Methods</h3>
+            <div class="h-64 w-full flex justify-center items-center">
+                <canvas id="paymentChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Tables Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Top Selling Items -->
+        <div class="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-pink-100 shadow-xl">
+            <h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Top Selling Items</h3>
+            <ul id="dashTopItemsList" class="space-y-4">
+                <!-- Injected via JS -->
+            </ul>
+        </div>
+        <!-- Recent Transactions -->
+        <div class="bg-white/70 backdrop-blur-xl p-6 rounded-[2rem] border border-pink-100 shadow-xl">
+            <h3 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-4">Recent Transactions</h3>
+            <div class="overflow-x-auto no-scrollbar">
+                <table class="w-full text-left whitespace-nowrap">
+                    <thead>
+                        <tr class="text-[10px] uppercase tracking-widest text-gray-400 border-b border-pink-100">
+                            <th class="pb-3 font-bold">Order ID</th>
+                            <th class="pb-3 font-bold">Time</th>
+                            <th class="pb-3 font-bold">Method</th>
+                            <th class="pb-3 font-bold text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashRecentOrdersList" class="divide-y divide-pink-50">
+                        <!-- Injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>

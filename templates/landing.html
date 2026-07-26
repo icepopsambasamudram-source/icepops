@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICEPOPS - Sweet Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Importing a friendly, rounded font to match the sweet theme -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #fcf9f9; /* Soft off-white background */
+        }
+        /* The custom pastel pink from your reference image */
+        .theme-pink { color: #f2b5b8; }
+        .bg-theme-pink { background-color: #f2b5b8; }
+        .border-theme-pink { border-color: #f2b5b8; }
+        
+        /* Smooth fade for form toggling */
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- Left Branding Side (The Blob Design) -->
+    <div class="w-full md:w-1/2 h-64 md:h-full relative flex items-center justify-center bg-[#fcf9f9] p-8 lg:p-16 overflow-visible z-10">
+        
+        <!-- Organic SVG Blob Background -->
+        <div class="absolute inset-0 flex items-center justify-center overflow-hidden md:overflow-visible">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" class="w-[150%] h-[150%] md:w-[130%] md:h-[130%] text-[#f2b5b8] fill-current opacity-90 transition-transform duration-1000 hover:scale-105">
+                <path d="M45.7,-76.3C58.9,-69.3,68.8,-54.6,76.5,-40.4C84.2,-26.2,89.7,-12.6,89.1,0.8C88.4,14.1,81.6,27.1,72.9,38C64.1,48.9,53.4,57.7,40.9,64.4C28.4,71.1,14.2,75.7,0.4,75.1C-13.4,74.5,-26.7,68.6,-40.1,62.2C-53.5,55.8,-67.1,48.8,-75.4,37.3C-83.7,25.8,-86.8,9.7,-85.4,-5.4C-84,-20.5,-78.2,-34.7,-69.1,-46.2C-60.1,-57.8,-47.9,-66.7,-35.1,-73.9C-22.3,-81.1,-11.1,-86.6,2.2,-90.1C15.5,-93.6,32.5,-83.4,45.7,-76.3Z" transform="translate(100 100) scale(1.1)" />
+            </svg>
+        </div>
+
+        <!-- Text Content over the Blob -->
+        <div class="relative z-20 text-white max-w-sm lg:mr-20 text-center md:text-left">
+            <h1 class="text-5xl lg:text-7xl font-extrabold tracking-tight mb-4 drop-shadow-md">ICEPOPS.</h1>
+            <p class="text-lg lg:text-xl font-semibold mb-4 drop-shadow">Time to delicious sweets</p>
+            <p class="text-sm opacity-90 leading-relaxed drop-shadow-sm hidden md:block">
+                Manage your inventory, process lightning-fast sales, and track every scoop with our beautifully designed management system.
+            </p>
+        </div>
+
+        <!-- Overlapping Circular Image (Hidden on small mobile for space) -->
+        <div class="absolute right-[-80px] lg:right-[-120px] top-1/2 -translate-y-1/2 hidden md:block z-30">
+            <!-- Using a high-quality placeholder image of an ice cream cone -->
+            <img src="static\landingpageicecream.jpg" 
+                 alt="Ice Cream Cone" 
+                 class="w-64 h-64 lg:w-80 lg:h-80 object-cover rounded-full border-[12px] border-[#fcf9f9] shadow-2xl hover:rotate-3 transition-transform duration-500">
+        </div>
+    </div>
+
+    <!-- Right Authentication Side -->
+    <div class="w-full md:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-[#fcf9f9] relative z-20">
+        <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2rem] shadow-[0_20px_60px_rgba(242,181,184,0.2)] border border-pink-50 relative overflow-hidden">
+            
+            <!-- Cute decorative circles inside the card -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-theme-pink opacity-10 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-pink-300 opacity-10 rounded-full blur-2xl"></div>
+
+            <div class="mb-8 relative z-10 text-center md:text-left">
+                <h2 id="formTitle" class="text-3xl font-extrabold mb-2 text-gray-800">Welcome back</h2>
+                <p id="formSubtitle" class="text-gray-500 text-sm">Please enter your details to sign in.</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-5 relative z-10 fade-in">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Username</label>
+                    <input type="text" id="loginUsername" required 
+                           class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#f2b5b8] focus:bg-white transition-all text-gray-700 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Password</label>
+                    <input type="password" id="loginPassword" required 
+                           class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#f2b5b8] focus:bg-white transition-all text-gray-700 font-medium">
+                </div>
+                <button type="submit" id="loginBtn" 
+                        class="w-full bg-theme-pink text-white font-bold py-4 rounded-2xl hover:bg-pink-400 transition-colors shadow-lg shadow-pink-200 mt-6 transform active:scale-95">
+                    Sign In
+                </button>
+                <p class="text-center text-sm mt-6 text-gray-500 font-medium">
+                    Don't have an account? 
+                    <button type="button" id="showSignup" class="font-bold theme-pink hover:text-pink-600 transition-colors">Create one</button>
+                </p>
+            </form>
+
+            <!-- Signup Form (Hidden initially) -->
+            <form id="signupForm" class="space-y-5 hidden relative z-10 fade-in">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Choose Username</label>
+                    <input type="text" id="signupUsername" required 
+                           class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#f2b5b8] focus:bg-white transition-all text-gray-700 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Choose Password</label>
+                    <input type="password" id="signupPassword" required 
+                           class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#f2b5b8] focus:bg-white transition-all text-gray-700 font-medium">
+                </div>
+                <button type="submit" id="signupBtn" 
+                        class="w-full bg-theme-pink text-white font-bold py-4 rounded-2xl hover:bg-pink-400 transition-colors shadow-lg shadow-pink-200 mt-6 transform active:scale-95">
+                    Create Account
+                </button>
+                <p class="text-center text-sm mt-6 text-gray-500 font-medium">
+                    Already have an account? 
+                    <button type="button" id="showLogin" class="font-bold theme-pink hover:text-pink-600 transition-colors">Sign in</button>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- The exact same auth.js handles the logic perfectly! -->
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>
