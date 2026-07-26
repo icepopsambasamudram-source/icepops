@@ -26,7 +26,7 @@ async function loadTreatsData() {
 
     loadStaffNames();
     fetchTreatHistory();
-    fetchTreatsSummary(); // NEW: Load financial summaries
+    fetchTreatsSummary(); 
 }
 
 async function loadStaffNames() {
@@ -48,14 +48,13 @@ async function loadStaffNames() {
     }
 }
 
-// NEW: Fetch and render the outstanding dues for staff
+// UPDATED: Now includes the Settle Button
 async function fetchTreatsSummary() {
     try {
         const res = await fetch('/api/treats/summary');
         if (res.ok) {
             const data = await res.json();
             
-            // Update Top Level KPI
             document.getElementById('overallTreatsTotal').innerText = `₹${data.overall_total.toFixed(2)}`;
             
             const container = document.getElementById('staffDuesContainer');
@@ -66,13 +65,15 @@ async function fetchTreatsSummary() {
                 return;
             }
             
-            // Generate a frosted card for each staff member
             data.summary.forEach(staff => {
                 container.innerHTML += `
                     <div class="bg-white/80 backdrop-blur-md border border-pink-100 p-5 rounded-2xl shadow-sm flex justify-between items-center hover:shadow-md transition-shadow">
                         <div>
                             <h4 class="font-black text-gray-800 text-lg">${staff._id}</h4>
                             <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">${staff.total_items} items consumed</p>
+                            <button onclick="settleDues('${staff._id}')" class="mt-3 bg-green-50 hover:bg-green-500 text-green-600 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors border border-green-200 shadow-sm">
+                                ✓ Settle Dues
+                            </button>
                         </div>
                         <div class="text-right bg-pink-50 px-4 py-2 rounded-xl border border-pink-100">
                             <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Owes</p>
@@ -84,6 +85,31 @@ async function fetchTreatsSummary() {
         }
     } catch (err) {
         console.error("Failed to load treats summary", err);
+    }
+}
+
+// NEW: API Call to Settle Dues
+async function settleDues(staffName) {
+    if(!confirm(`Are you sure you want to mark all pending dues for ${staffName} as settled/paid?`)) return;
+    
+    try {
+        const response = await fetch('/api/treats/settle', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ staff_name: staffName })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert("✅ " + data.message);
+            fetchTreatsSummary(); // Refresh the summary cards instantly
+        } else {
+            alert("⚠️ Error: " + data.error);
+        }
+    } catch (err) {
+        console.error("Settle error:", err);
+        alert("⚠️ A network error occurred.");
     }
 }
 
@@ -110,13 +136,16 @@ async function fetchTreatHistory() {
                 else if(log.reason.includes('Testing')) reasonBadge = 'bg-purple-50 text-purple-500 border-purple-100';
                 else reasonBadge = 'bg-green-50 text-green-600 border-green-100';
 
+                // Display settled status quietly in the log if applicable
+                const settledLabel = log.status === 'settled' ? ' <span class="text-green-500 ml-1">✓</span>' : '';
+
                 tbody.innerHTML += `
                     <tr class="hover:bg-white/60 transition-colors">
                         <td class="p-4 text-xs font-semibold text-gray-500">${dateStr}</td>
                         <td class="p-4 font-black text-gray-800">${log.staff_name}</td>
                         <td class="p-4 font-bold text-gray-700">${log.product_name}</td>
                         <td class="p-4 font-black text-pink-500 text-center text-lg">${log.units_consumed}</td>
-                        <td class="p-4"><span class="${reasonBadge} border px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm">${log.reason}</span></td>
+                        <td class="p-4"><span class="${reasonBadge} border px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm">${log.reason}${settledLabel}</span></td>
                     </tr>
                 `;
             });
@@ -157,7 +186,7 @@ async function handleTreatSubmission(e) {
         if (response.ok) {
             alert("✅ " + data.message);
             document.getElementById('treatUnits').value = 1;
-            loadTreatsData(); // Will refresh dropdowns, history, AND the dues summary!
+            loadTreatsData(); 
         } else {
             alert("⚠️ Error: " + data.error);
         }

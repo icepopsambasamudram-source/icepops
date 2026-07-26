@@ -59,19 +59,21 @@ def get_staff_names():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# NEW: Aggregation route to calculate outstanding dues per staff member
 @treats_bp.route('/api/treats/summary', methods=['GET'])
 def get_treats_summary():
     try:
         pipeline = [
-            # Only calculate costs for items marked as "Staff/Owner Treat"
-            {"$match": {"reason": "Staff/Owner Treat"}},
+            # UPDATED: Match Treats that have NOT been settled yet
+            {"$match": {
+                "reason": "Staff/Owner Treat",
+                "status": {"$ne": "settled"}
+            }},
             {"$group": {
                 "_id": "$staff_name",
                 "total_owed": {"$sum": {"$multiply": ["$units_consumed", "$unit_cost_val"]}},
                 "total_items": {"$sum": "$units_consumed"}
             }},
-            {"$sort": {"total_owed": -1}} # Sort by highest amount owed
+            {"$sort": {"total_owed": -1}} 
         ]
         
         summary = list(db.staff_consumptions.aggregate(pipeline))
@@ -83,6 +85,37 @@ def get_treats_summary():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# NEW ROUTE: Settle Staff Dues
+@treats_bp.route('/api/treats/settle', methods=['POST'])
+def settle_dues():
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.json
+    staff_name = data.get('staff_name')
+    
+    if not staff_name:
+        return jsonify({"error": "Staff name is required"}), 400
+
+    # Find all unsettled treats for this staff member and mark them as settled
+    result = db.staff_consumptions.update_many(
+        {
+            "staff_name": staff_name,
+            "reason": "Staff/Owner Treat",
+            "status": {"$ne": "settled"}
+        },
+        {"$set": {
+            "status": "settled", 
+            "settled_at": datetime.utcnow(), 
+            "settled_by": session.get('username')
+        }}
+    )
+    
+    if result.modified_count > 0:
+        return jsonify({"message": f"Successfully settled dues for {staff_name}."}), 200
+    else:
+        return jsonify({"message": f"No pending dues found for {staff_name}."}), 200
 
 @treats_bp.route('/api/treats', methods=['POST'])
 def log_treat():
@@ -113,6 +146,7 @@ def log_treat():
         "product_name": result['name'],
         "units_consumed": units,
         "reason": reason,
+        "status": "pending", # Added pending status
         "unit_cost_val": result.get('price_per_unit', 0),
         "created_at": datetime.utcnow()
     }
