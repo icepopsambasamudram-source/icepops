@@ -14,7 +14,6 @@
             font-family: 'Poppins', sans-serif;
             background-color: #fcf9f9; /* Soft off-white background */
         }
-        /* The custom pastel pink from your reference image */
         .theme-pink { color: #f2b5b8; }
         .bg-theme-pink { background-color: #f2b5b8; }
         .border-theme-pink { border-color: #f2b5b8; }
@@ -48,10 +47,8 @@
             </p>
         </div>
 
-        <!-- Overlapping Circular Image (Hidden on small mobile for space) -->
         <div class="absolute right-[-80px] lg:right-[-120px] top-1/2 -translate-y-1/2 hidden md:block z-30">
-            <!-- Using a high-quality placeholder image of an ice cream cone -->
-            <img src="static\landingpageicecream.jpg" 
+            <img src="static/landingpageicecream.jpg" 
                  alt="Ice Cream Cone" 
                  class="w-64 h-64 lg:w-80 lg:h-80 object-cover rounded-full border-[12px] border-[#fcf9f9] shadow-2xl hover:rotate-3 transition-transform duration-500">
         </div>
@@ -61,7 +58,6 @@
     <div class="w-full md:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-[#fcf9f9] relative z-20">
         <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-[2rem] shadow-[0_20px_60px_rgba(242,181,184,0.2)] border border-pink-50 relative overflow-hidden">
             
-            <!-- Cute decorative circles inside the card -->
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-theme-pink opacity-10 rounded-full blur-2xl"></div>
             <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-pink-300 opacity-10 rounded-full blur-2xl"></div>
 
@@ -92,7 +88,7 @@
                 </p>
             </form>
 
-            <!-- Signup Form (Hidden initially) -->
+            <!-- Signup Form -->
             <form id="signupForm" class="space-y-5 hidden relative z-10 fade-in">
                 <div>
                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Choose Username</label>
@@ -104,6 +100,13 @@
                     <input type="password" id="signupPassword" required 
                            class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#f2b5b8] focus:bg-white transition-all text-gray-700 font-medium">
                 </div>
+                <!-- NEW: Security Key Input -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Admin Security Key</label>
+                    <input type="password" id="signupSecurityKey" required placeholder="Authorized personnel only"
+                           class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#f2b5b8] focus:bg-white transition-all text-gray-700 font-medium">
+                </div>
+                
                 <button type="submit" id="signupBtn" 
                         class="w-full bg-theme-pink text-white font-bold py-4 rounded-2xl hover:bg-pink-400 transition-colors shadow-lg shadow-pink-200 mt-6 transform active:scale-95">
                     Create Account
@@ -116,7 +119,6 @@
         </div>
     </div>
 
-    <!-- The exact same auth.js handles the logic perfectly! -->
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 </body>
 </html>

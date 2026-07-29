@@ -11,9 +11,14 @@ def signup():
     data = request.json
     username = data.get('username')
     password = data.get('password')
+    security_key = data.get('security_key') # Extract the new security key
     
     if not username or not password:
         return jsonify({"error": "Username and password required"}), 400
+
+    # NEW: Validate the Security Key before processing the user
+    if security_key != "ICEPOPS@123":
+        return jsonify({"error": "Invalid Security Key. Unauthorized to create an account."}), 403
 
     if db.users.find_one({"username": username}):
         return jsonify({"error": "User already exists"}), 400

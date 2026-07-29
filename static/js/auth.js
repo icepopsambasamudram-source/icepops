@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const username = document.getElementById('signupUsername').value;
         const password = document.getElementById('signupPassword').value;
+        const securityKey = document.getElementById('signupSecurityKey').value; // Get the Security Key
         const btn = document.getElementById('signupBtn');
         
         btn.innerText = "Creating...";
@@ -66,7 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/auth/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }) 
+                body: JSON.stringify({ 
+                    username: username, 
+                    password: password, 
+                    security_key: securityKey // Send key to backend
+                }) 
             });
 
             const data = await response.json();
@@ -76,6 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showLoginLink.click();
                 document.getElementById('loginUsername').value = username;
                 document.getElementById('loginPassword').value = '';
+                document.getElementById('signupSecurityKey').value = ''; 
             } else {
                 alert(`Signup Failed: ${data.error}`);
             }
