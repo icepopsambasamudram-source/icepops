@@ -8,11 +8,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         
         <!-- Logger Form -->
-        <div class="bg-white/60 backdrop-blur-2xl p-8 rounded-[2rem] border border-pink-100 shadow-xl h-fit relative overflow-hidden">
+        <div class="bg-white/60 backdrop-blur-2xl p-8 rounded-[2rem] border border-pink-100 shadow-xl h-fit relative overflow-hidden flex flex-col">
             <div class="absolute -right-4 -top-4 w-32 h-32 bg-pink-200/50 rounded-full blur-3xl"></div>
             
-            <h3 class="text-xl font-extrabold text-gray-800 mb-6 relative z-10">Log an Item</h3>
-            <form id="treatsForm" class="space-y-5 relative z-10">
+            <h3 class="text-xl font-extrabold text-gray-800 mb-6 relative z-10">Log Items</h3>
+            <form id="treatsForm" class="space-y-5 relative z-10 flex-1 flex flex-col">
                 
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Staff Member Name</label>
@@ -21,36 +21,43 @@
                     <datalist id="staffNameList"></datalist>
                 </div>
 
+                <!-- NEW: Searchable Product Selection -->
+                <div class="flex gap-3 items-end">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Search Product</label>
+                        <input type="text" id="treatProductSearch" list="treatProductDataList" placeholder="Type to search..." autocomplete="off" class="w-full bg-white/80 border border-pink-100 rounded-2xl px-5 py-3 text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all shadow-sm">
+                        <datalist id="treatProductDataList">
+                            <!-- Populated via JS -->
+                        </datalist>
+                    </div>
+                    <button type="button" onclick="addTreatItem()" class="bg-gray-800 text-white px-5 py-3 rounded-2xl font-bold hover:bg-black transition-colors shadow-md">ADD</button>
+                </div>
+
+                <!-- NEW: Mini Cart Container -->
+                <div id="treatCartContainer" class="bg-white/50 rounded-2xl p-4 border border-pink-100 hidden">
+                    <h4 class="text-[10px] font-bold text-pink-500 uppercase tracking-widest mb-3">Selected Items</h4>
+                    <ul id="treatCartList" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                        <!-- Added items appear here -->
+                    </ul>
+                </div>
+                
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Select Product</label>
-                    <select id="treatProductSelect" required class="w-full bg-white/80 border border-pink-100 rounded-2xl px-5 py-3 text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all shadow-sm">
-                        <!-- Populated via JS -->
+                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Reason</label>
+                    <select id="treatReason" required class="w-full bg-white/80 border border-pink-100 rounded-2xl px-5 py-3.5 text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all shadow-sm cursor-pointer">
+                        <option value="Staff/Owner Treat">Staff/Owner Treat 🍦</option>
+                        <option value="Damaged/Melted">Damaged / Melted ⚠️</option>
+                        <option value="Quality Testing">Quality Testing 🔬</option>
+                        <option value="Promotional Giveaway">Promo Giveaway 🎁</option>
                     </select>
                 </div>
                 
-                <div class="flex gap-4">
-                    <div class="w-1/3">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Units</label>
-                        <input type="number" id="treatUnits" value="1" min="1" required class="w-full bg-white/80 border border-pink-100 rounded-2xl px-5 py-3 text-pink-500 text-xl font-black focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all shadow-sm text-center">
-                    </div>
-                    <div class="w-2/3">
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Reason</label>
-                        <select id="treatReason" required class="w-full bg-white/80 border border-pink-100 rounded-2xl px-5 py-3.5 text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all shadow-sm">
-                            <option value="Staff/Owner Treat">Staff/Owner Treat 🍦</option>
-                            <option value="Damaged/Melted">Damaged / Melted ⚠️</option>
-                            <option value="Quality Testing">Quality Testing 🔬</option>
-                            <option value="Promotional Giveaway">Promo Giveaway 🎁</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <button type="submit" id="treatSubmitBtn" class="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white font-black py-4 rounded-2xl hover:shadow-lg hover:shadow-pink-200 transition-all mt-6 transform hover:scale-[1.02]">
+                <button type="submit" id="treatSubmitBtn" class="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white font-black py-4 rounded-2xl hover:shadow-lg hover:shadow-pink-200 transition-all mt-auto transform hover:scale-[1.02]">
                     DEDUCT FROM STOCK
                 </button>
             </form>
         </div>
 
-        <!-- NEW: Staff Pending Dues Tracker -->
+        <!-- Staff Pending Dues Tracker -->
         <div class="lg:col-span-2 bg-white/60 backdrop-blur-2xl p-6 rounded-[2rem] border border-pink-100 shadow-xl flex flex-col h-full max-h-[500px]">
             <div class="flex justify-between items-center mb-6 border-b border-pink-100 pb-4">
                 <h3 class="text-xl font-extrabold text-gray-800">Pending Staff Dues</h3>
@@ -60,7 +67,7 @@
                 </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto no-scrollbar pb-2" id="staffDuesContainer">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto custom-scrollbar pb-2" id="staffDuesContainer">
                 <!-- Cards injected via JS -->
             </div>
         </div>
@@ -69,7 +76,7 @@
     <!-- Bottom Row: Recent Logs Table -->
     <div class="bg-white/60 backdrop-blur-2xl p-6 rounded-[2rem] border border-pink-100 shadow-xl flex flex-col">
         <h3 class="text-xl font-extrabold text-gray-800 mb-6">Recent Activity Log</h3>
-        <div class="flex-1 overflow-auto no-scrollbar rounded-xl border border-white/50 bg-white/30">
+        <div class="flex-1 overflow-auto custom-scrollbar rounded-xl border border-white/50 bg-white/30">
             <table class="w-full text-left whitespace-nowrap">
                 <thead class="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
                     <tr class="text-[10px] uppercase tracking-widest text-gray-500 border-b border-pink-100">
@@ -78,6 +85,8 @@
                         <th class="p-5 font-bold">Product</th>
                         <th class="p-5 font-bold text-center">Qty</th>
                         <th class="p-5 font-bold">Reason</th>
+                        <!-- NEW: Action Column -->
+                        <th class="p-5 font-bold text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="treatsHistoryBody" class="divide-y divide-pink-50">

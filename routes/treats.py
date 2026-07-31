@@ -42,6 +42,29 @@ def deduct_inventory_for_treat(product_id, qty_to_deduct):
     )
     return True, product
 
+def revert_inventory_for_treat(product_id, qty_to_add):
+    """Helper function to add stock back when a treat log is deleted."""
+    try:
+        product = db.products.find_one({"_id": ObjectId(product_id)})
+        if not product: return False
+        
+        units_per_box = product.get("units_per_box", 1)
+        boxes = product.get("boxes_in_stock", 0)
+        loose = product.get("loose_units_in_stock", 0)
+        
+        total_new_units = (boxes * units_per_box) + loose + qty_to_add
+        db.products.update_one(
+            {"_id": ObjectId(product_id)},
+            {"$set": {
+                "boxes_in_stock": total_new_units // units_per_box,
+                "loose_units_in_stock": total_new_units % units_per_box,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        return True
+    except:
+        return False
+
 @treats_bp.route('/api/treats', methods=['GET'])
 def get_treats():
     try:
@@ -63,7 +86,6 @@ def get_staff_names():
 def get_treats_summary():
     try:
         pipeline = [
-            # UPDATED: Match Treats that have NOT been settled yet
             {"$match": {
                 "reason": "Staff/Owner Treat",
                 "status": {"$ne": "settled"}
@@ -86,7 +108,6 @@ def get_treats_summary():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# NEW ROUTE: Settle Staff Dues
 @treats_bp.route('/api/treats/settle', methods=['POST'])
 def settle_dues():
     if 'user_id' not in session:
@@ -94,22 +115,11 @@ def settle_dues():
 
     data = request.json
     staff_name = data.get('staff_name')
-    
-    if not staff_name:
-        return jsonify({"error": "Staff name is required"}), 400
+    if not staff_name: return jsonify({"error": "Staff name is required"}), 400
 
-    # Find all unsettled treats for this staff member and mark them as settled
     result = db.staff_consumptions.update_many(
-        {
-            "staff_name": staff_name,
-            "reason": "Staff/Owner Treat",
-            "status": {"$ne": "settled"}
-        },
-        {"$set": {
-            "status": "settled", 
-            "settled_at": datetime.utcnow(), 
-            "settled_by": session.get('username')
-        }}
+        {"staff_name": staff_name, "reason": "Staff/Owner Treat", "status": {"$ne": "settled"}},
+        {"$set": {"status": "settled", "settled_at": datetime.utcnow(), "settled_by": session.get('username')}}
     )
     
     if result.modified_count > 0:
@@ -117,39 +127,66 @@ def settle_dues():
     else:
         return jsonify({"message": f"No pending dues found for {staff_name}."}), 200
 
+# NEW ROUTE: Delete a treat log and revert the stock
+@treats_bp.route('/api/treats/<treat_id>', methods=['DELETE'])
+def delete_treat(treat_id):
+    if 'user_id' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        treat = db.staff_consumptions.find_one({"_id": ObjectId(treat_id)})
+        if not treat:
+            return jsonify({"error": "Log record not found."}), 404
+            
+        revert_inventory_for_treat(treat['product_id'], treat['units_consumed'])
+        db.staff_consumptions.delete_one({"_id": ObjectId(treat_id)})
+        
+        return jsonify({"message": "Log deleted and stock successfully reverted."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @treats_bp.route('/api/treats', methods=['POST'])
 def log_treat():
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
     data = request.json
-    product_id = data.get('product_id')
-    
-    try:
-        units = int(data.get('units_consumed', 1))
-    except ValueError:
-        return jsonify({"error": "Invalid quantity provided."}), 400
-
+    items = data.get('items', [])
     reason = data.get('reason', 'Staff Treat')
-    
     staff_name = data.get('staff_name', '').strip().title()
-    if not staff_name:
-        return jsonify({"error": "Staff name is required"}), 400
     
-    success, result = deduct_inventory_for_treat(product_id, units)
-    if not success:
-        return jsonify({"error": result}), 400
+    if not staff_name: return jsonify({"error": "Staff name is required"}), 400
+    if not items: return jsonify({"error": "At least one product is required"}), 400
+    
+    records_to_insert = []
+    
+    # Process multiple items
+    for item in items:
+        product_id = item.get('product_id')
+        try:
+            units = int(item.get('units', 1))
+        except ValueError:
+            return jsonify({"error": "Invalid quantity provided."}), 400
+
+        success, result = deduct_inventory_for_treat(product_id, units)
+        if not success:
+            # ROLLBACK PREVIOUSLY DEDUCTED ITEMS IF ONE FAILS
+            for record in records_to_insert:
+                revert_inventory_for_treat(record['product_id'], record['units_consumed'])
+            return jsonify({"error": f"Failed on item '{item.get('name', 'Unknown')}': {result}"}), 400
+            
+        records_to_insert.append({
+            "staff_name": staff_name,
+            "product_id": ObjectId(product_id),
+            "product_name": result['name'],
+            "units_consumed": units,
+            "reason": reason,
+            "status": "pending",
+            "unit_cost_val": result.get('price_per_unit', 0),
+            "created_at": datetime.utcnow()
+        })
+    
+    if records_to_insert:
+        db.staff_consumptions.insert_many(records_to_insert)
         
-    treat_record = {
-        "staff_name": staff_name,
-        "product_id": ObjectId(product_id),
-        "product_name": result['name'],
-        "units_consumed": units,
-        "reason": reason,
-        "status": "pending", # Added pending status
-        "unit_cost_val": result.get('price_per_unit', 0),
-        "created_at": datetime.utcnow()
-    }
-    
-    db.staff_consumptions.insert_one(treat_record)
-    return jsonify({"message": "Item logged and stock deducted successfully!"}), 201
+    return jsonify({"message": "Items logged and stock deducted successfully!"}), 201

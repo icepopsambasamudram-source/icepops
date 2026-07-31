@@ -35,7 +35,6 @@ def deduct_inventory(product_id, qty_to_deduct):
     return True, ""
 
 def revert_inventory(product_id, qty_to_add):
-    """Adds stock back when a bill is deleted/cancelled."""
     product = db.products.find_one({"_id": ObjectId(product_id)})
     if not product:
         return False
@@ -55,6 +54,28 @@ def revert_inventory(product_id, qty_to_add):
     )
     return True
 
+def generate_order_number():
+    """Generates an order number in the format DDMMYYXXXX"""
+    now = datetime.utcnow()
+    date_prefix = now.strftime("%d%m%y")
+    
+    # Find the latest order for today
+    last_order = db.orders.find_one(
+        {"order_number": {"$regex": f"^{date_prefix}"}},
+        sort=[("order_number", -1)]
+    )
+    
+    if last_order and len(last_order.get("order_number", "")) >= 10:
+        try:
+            last_seq = int(last_order["order_number"][6:10])
+            new_seq = last_seq + 1
+        except ValueError:
+            new_seq = 1
+    else:
+        new_seq = 1
+        
+    return f"{date_prefix}{new_seq:04d}"
+
 @pos_bp.route('/api/orders', methods=['POST'])
 def create_order():
     if 'user_id' not in session:
@@ -71,8 +92,11 @@ def create_order():
             return jsonify({"error": error_msg}), 400
         total += (item['price_at_sale'] * item['quantity'])
 
+    # Use the new Order ID generator
+    order_number = generate_order_number()
+
     order = {
-        "order_number": f"ORD-{int(datetime.utcnow().timestamp())}",
+        "order_number": order_number,
         "cashier_name": session.get('username'),
         "items": items,
         "total_amount": total,
@@ -85,11 +109,15 @@ def create_order():
     }
     
     db.orders.insert_one(order)
-    return jsonify({"message": "Order completed", "order_number": order["order_number"]}), 201
+    # Return the full order data so the frontend can format the WhatsApp bill immediately
+    return jsonify({
+        "message": "Order completed", 
+        "order_number": order_number,
+        "order_data": parse_json(order)
+    }), 201
 
 @pos_bp.route('/api/orders', methods=['GET'])
 def get_orders():
-    """Fetch orders with date filtering and search."""
     start_str = request.args.get('start')
     end_str = request.args.get('end')
     search_query = request.args.get('q', '').strip()
@@ -109,7 +137,6 @@ def get_orders():
 
 @pos_bp.route('/api/orders/<order_id>', methods=['DELETE'])
 def delete_order(order_id):
-    """Cancel an order and revert the stock."""
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -117,11 +144,8 @@ def delete_order(order_id):
     if not order:
         return jsonify({"error": "Order not found"}), 404
 
-    # Revert inventory for each item
     for item in order.get('items', []):
         revert_inventory(item['product_id'], item['quantity'])
 
-    # Delete or mark as cancelled
     db.orders.update_one({"_id": ObjectId(order_id)}, {"$set": {"status": "cancelled", "updated_at": datetime.utcnow()}})
-    
     return jsonify({"message": f"Order {order['order_number']} deleted. Stock reverted."}), 200

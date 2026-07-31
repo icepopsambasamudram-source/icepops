@@ -26,14 +26,18 @@ def get_products():
     try:
         products = list(db.products.find({}).sort("updated_at", -1))
         
-        # Calculate summary metrics for the dashboard
         total_value = 0
         low_stock_count = 0
         
         for p in products:
             total_units = (p.get('boxes_in_stock', 0) * p.get('units_per_box', 1)) + p.get('loose_units_in_stock', 0)
             total_value += (total_units * p.get('price_per_unit', 0))
-            if total_units <= (p.get('low_stock_box_threshold', 1) * p.get('units_per_box', 1)):
+            
+            # UPDATED: Low stock threshold is now strictly based on units
+            # Fallback to old box threshold calculation for backwards compatibility on old records
+            threshold = p.get('low_stock_unit_threshold', p.get('low_stock_box_threshold', 1) * p.get('units_per_box', 1))
+            
+            if total_units <= threshold:
                 low_stock_count += 1
 
         return jsonify({
@@ -51,7 +55,6 @@ def get_products():
 def create_product():
     data = request.json
     
-    # Validation: Duplicate SKU Check
     if db.products.find_one({"sku": data.get('sku').strip().upper()}):
         return jsonify({"error": f"SKU {data.get('sku')} already exists."}), 400
 
@@ -69,7 +72,7 @@ def create_product():
         "boxes_in_stock": stock_data['boxes_in_stock'],
         "units_per_box": int(data.get('units_per_box', 1)),
         "loose_units_in_stock": stock_data['loose_units_in_stock'],
-        "low_stock_box_threshold": int(data.get('low_stock_box_threshold', 1)),
+        "low_stock_unit_threshold": int(data.get('low_stock_unit_threshold', 10)),
         "updated_at": datetime.utcnow()
     }
     
@@ -80,26 +83,35 @@ def create_product():
 def update_product(product_id):
     data = request.json
     
-    # Validation: SKU uniqueness excluding current product
     existing_sku = db.products.find_one({"sku": data.get('sku').strip().upper(), "_id": {"$ne": ObjectId(product_id)}})
     if existing_sku:
         return jsonify({"error": f"SKU {data.get('sku')} is already used by another product."}), 400
 
-    stock_data = calculate_stock(
-        data.get('boxes_in_stock', 0), 
-        data.get('loose_units_in_stock', 0), 
-        data.get('units_per_box', 1)
-    )
+    # Retrieve current product to safely add new stock
+    current_product = db.products.find_one({"_id": ObjectId(product_id)})
+    if not current_product:
+        return jsonify({"error": "Product not found."}), 404
+
+    # Calculate existing absolute total units
+    current_units_per_box = current_product.get('units_per_box', 1)
+    current_total_units = (current_product.get('boxes_in_stock', 0) * current_units_per_box) + current_product.get('loose_units_in_stock', 0)
+
+    # Calculate the NEW units being added
+    new_units_per_box = int(data.get('units_per_box', 1))
+    added_total_units = (int(data.get('add_boxes', 0)) * new_units_per_box) + int(data.get('add_loose', 0))
+
+    # Calculate new final stock based on the new box configuration
+    final_total_units = current_total_units + added_total_units
 
     update_fields = {
         "sku": data.get('sku').strip().upper(),
         "name": data.get('name').strip(),
         "category": data.get('category').strip(),
         "price_per_unit": float(data.get('price_per_unit', 0)),
-        "boxes_in_stock": stock_data['boxes_in_stock'],
-        "units_per_box": int(data.get('units_per_box', 1)),
-        "loose_units_in_stock": stock_data['loose_units_in_stock'],
-        "low_stock_box_threshold": int(data.get('low_stock_box_threshold', 1)),
+        "boxes_in_stock": final_total_units // new_units_per_box,
+        "units_per_box": new_units_per_box,
+        "loose_units_in_stock": final_total_units % new_units_per_box,
+        "low_stock_unit_threshold": int(data.get('low_stock_unit_threshold', 10)),
         "updated_at": datetime.utcnow()
     }
 

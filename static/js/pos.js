@@ -10,16 +10,39 @@ let cartTotalValue = 0;
 document.addEventListener('DOMContentLoaded', () => {
     loadProducts();
     
-    // Set date pickers to today's date by default
     const today = new Date().toISOString().split('T')[0];
     const billStartEl = document.getElementById('billStart');
     const billEndEl = document.getElementById('billEnd');
     if (billStartEl) billStartEl.value = today;
     if (billEndEl) billEndEl.value = today;
     
-    loadOrdersHistory(); // Will now load today's bills automatically
+    loadOrdersHistory(); 
     renderTabs();
 });
+
+// --- VIEW TOGGLE LOGIC ---
+function togglePosView(view) {
+    const productsSec = document.getElementById('posProductsSection');
+    const billsSec = document.getElementById('posBillsSection');
+    const btnProducts = document.getElementById('btnViewProducts');
+    const btnBills = document.getElementById('btnViewBills');
+
+    if (view === 'products') {
+        productsSec.classList.remove('hidden');
+        billsSec.classList.add('hidden');
+        
+        btnProducts.className = "flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-2.5 rounded-xl font-black text-sm shadow-md shadow-pink-200 transition-all transform hover:scale-[1.02]";
+        btnBills.className = "flex-1 bg-white/60 text-gray-600 hover:bg-white hover:text-pink-500 py-2.5 rounded-xl font-bold text-sm border border-pink-100 transition-all";
+    } else {
+        productsSec.classList.add('hidden');
+        billsSec.classList.remove('hidden');
+        
+        btnBills.className = "flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-2.5 rounded-xl font-black text-sm shadow-md shadow-pink-200 transition-all transform hover:scale-[1.02]";
+        btnProducts.className = "flex-1 bg-white/60 text-gray-600 hover:bg-white hover:text-pink-500 py-2.5 rounded-xl font-bold text-sm border border-pink-100 transition-all";
+        
+        loadOrdersHistory(); 
+    }
+}
 
 // --- API FETCHES ---
 async function loadProducts() {
@@ -36,7 +59,6 @@ async function loadProducts() {
 }
 
 async function loadOrdersHistory() {
-    // Read from inputs, fallback to today if inputs aren't found
     let startInput = document.getElementById('billStart')?.value;
     let endInput = document.getElementById('billEnd')?.value;
     
@@ -102,21 +124,15 @@ function switchTab(id) {
 }
 
 function closeTab(event, id) {
-    event.stopPropagation(); // Prevent triggering switchTab
-    
+    event.stopPropagation(); 
     ordersState = ordersState.filter(o => o.id !== id);
-    
-    // Always keep at least one tab open
     if(ordersState.length === 0) {
         orderCounter++;
         ordersState.push({ id: orderCounter, name: `Tab #${orderCounter}`, items: [] });
     }
-    
-    // If we closed the active tab, switch to the first available one
     if (activeOrderId === id) {
         activeOrderId = ordersState[0].id;
     }
-    
     renderTabs();
     renderCart();
 }
@@ -133,7 +149,9 @@ function filterPOSProducts() {
 
 function renderPOSProducts(dataToRender) {
     const grid = document.getElementById('posProductGrid');
-    grid.className = "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4";
+    
+    // EXACT FIX: Removed grid.className override. 
+    // Just clear the innerHTML so we don't delete the Tailwind scroll classes!
     grid.innerHTML = '';
 
     dataToRender.forEach(p => {
@@ -141,7 +159,6 @@ function renderPOSProducts(dataToRender) {
         const isLow = totalUnits <= (p.low_stock_box_threshold * p.units_per_box);
 
         const card = document.createElement('div');
-        // Frosted glass cards with a subtle pastel gradient top-border effect
         card.className = "bg-white/70 backdrop-blur-xl p-4 rounded-[2rem] cursor-pointer hover:bg-white transition-all border border-white/80 shadow-sm hover:shadow-xl hover:shadow-pink-100 flex flex-col justify-between group h-36 relative overflow-hidden";
         card.innerHTML = `
             <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-200 to-purple-200 opacity-50 group-hover:opacity-100 transition-opacity"></div>
@@ -226,24 +243,15 @@ function renderCart() {
     document.getElementById('cartTotal').innerText = `₹${cartTotalValue.toFixed(2)}`;
 }
 
-// --- ORDER HISTORY & VOIDING LOGIC ---
-function filterOrders() {
-    // Supports either orderSearch or billSearch HTML IDs safely
-    const searchEl = document.getElementById('orderSearch') || document.getElementById('billSearch');
-    const query = searchEl ? searchEl.value.toLowerCase() : '';
-    
-    const filtered = recentOrdersData.filter(o => o.order_number.toLowerCase().includes(query));
-    renderOrders(filtered);
-}
-
+// --- ORDER HISTORY, WHATSAPP, & VOIDING LOGIC ---
 function renderOrders(data) {
-    const tbody = document.getElementById('billsTableBody') || document.getElementById('posOrderHistoryBody');
-    if (!tbody) return; // Fail gracefully if table isn't in DOM yet
+    const tbody = document.getElementById('billsTableBody');
+    if (!tbody) return; 
     
     tbody.innerHTML = '';
     
     if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-gray-500 font-bold">No bills found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500 font-bold">No bills found.</td></tr>';
         return;
     }
 
@@ -251,14 +259,9 @@ function renderOrders(data) {
         const oid = typeof order._id === 'object' ? order._id.$oid : order._id;
         const dateObj = new Date(order.created_at.$date || order.created_at);
         const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        
-        let methodBadge = '';
-        if (order.payment_method === 'cash') methodBadge = '<span class="bg-green-100 text-green-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-green-200">CASH</span>';
-        else if (order.payment_method === 'upi') methodBadge = '<span class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-blue-200">UPI</span>';
-        else methodBadge = '<span class="bg-purple-100 text-purple-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border border-purple-200">SPLIT</span>';
 
         let itemsSummary = order.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
-        if (itemsSummary.length > 40) itemsSummary = itemsSummary.substring(0, 40) + '...';
+        if (itemsSummary.length > 35) itemsSummary = itemsSummary.substring(0, 35) + '...';
 
         const tr = document.createElement('tr');
         tr.className = "hover:bg-white/40 transition-colors";
@@ -266,16 +269,106 @@ function renderOrders(data) {
             <td class="p-4 font-black text-pink-500 text-sm">${order.order_number}</td>
             <td class="p-4 text-sm font-semibold text-gray-600">${timeStr}</td>
             <td class="p-4 text-sm text-gray-500 font-medium">${itemsSummary}</td>
-            <td class="p-4">${methodBadge}</td>
             <td class="p-4 font-black text-gray-800">₹${order.total_amount.toFixed(2)}</td>
-            <td class="p-4 text-right">
-                <button onclick="voidOrder('${oid}', '${order.order_number}')" class="bg-red-50 hover:bg-red-500 text-red-500 hover:text-white font-bold text-xs px-4 py-2 rounded-xl border border-red-200 transition-colors">
+            <td class="p-4 flex gap-3 justify-end items-center">
+                <button onclick="viewBill('${order.order_number}')" title="View & Send WhatsApp Bill" class="w-10 h-10 rounded-full bg-white border border-blue-100 flex items-center justify-center text-blue-500 hover:text-white hover:bg-blue-500 hover:border-blue-500 transition-all shadow-sm transform hover:-translate-y-1">
+                    <i class="fa-solid fa-file-invoice text-xl"></i>
+                </button>
+
+                <button onclick="voidOrder('${oid}', '${order.order_number}')" class="bg-red-50 hover:bg-red-500 text-red-500 hover:text-white font-bold text-xs px-3 py-2 rounded-xl border border-red-200 transition-colors">
                     Void Bill
                 </button>
             </td>
         `;
         tbody.appendChild(tr);
     });
+}
+
+function viewBill(orderNum) {
+    const order = recentOrdersData.find(o => o.order_number === orderNum);
+    if(!order) return;
+
+    let billHtml = `
+        <div style="background: white; padding: 10px;">
+            <div class="text-center mb-6 border-b-2 border-gray-800 pb-4">
+                <h1 class="text-3xl font-black text-pink-500 tracking-tighter">ICEPOPS.</h1>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Order: ${order.order_number}</p>
+                <p class="text-xs text-gray-400 mt-1">${new Date(order.created_at.$date || order.created_at).toLocaleString()}</p>
+            </div>`;
+    
+    order.items.forEach(i => {
+        billHtml += `
+            <div class="flex justify-between mb-2 text-base font-bold text-gray-800">
+                <span>${i.quantity}x ${i.name}</span>
+                <span>₹${(i.quantity * i.price_at_sale).toFixed(2)}</span>
+            </div>`;
+    });
+    
+    billHtml += `
+            <div class="flex justify-between mt-6 border-t-2 border-gray-800 pt-4 text-xl font-black text-gray-900">
+                <span>TOTAL</span>
+                <span>₹${order.total_amount.toFixed(2)}</span>
+            </div>
+            <div class="text-center mt-6 text-xs font-bold text-gray-400 uppercase tracking-widest">
+                Thank you for visiting! 🍦
+            </div>
+        </div>`;
+                 
+    document.getElementById('billPrintArea').innerHTML = billHtml;
+    document.getElementById('waShareBtn').onclick = () => shareWhatsApp(order.order_number);
+
+    const modal = document.getElementById('viewBillModal');
+    modal.classList.remove('hidden');
+}
+
+function closeViewBillModal() {
+    document.getElementById('viewBillModal').classList.add('hidden');
+}
+
+async function shareWhatsApp(orderNum) {
+    const billElement = document.getElementById('billPrintArea');
+    const waBtn = document.getElementById('waShareBtn');
+    
+    waBtn.innerText = "Generating Image...";
+    waBtn.disabled = true;
+
+    try {
+        const canvas = await html2canvas(billElement, { 
+            scale: 2, 
+            backgroundColor: "#ffffff",
+            logging: false
+        });
+        
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        const file = new File([blob], `ICEPOPS_Invoice_${orderNum}.png`, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: `Invoice ${orderNum}`,
+                text: `Here is your invoice for order ${orderNum}. Thank you for visiting ICEPOPS! 🍦`
+            });
+        } else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ICEPOPS_Invoice_${orderNum}.png`;
+            a.click();
+            
+            const phone = prompt("Invoice image downloaded successfully! \n\nEnter the customer's WhatsApp number (e.g., 919876543210) to open the chat, then drag-and-drop the downloaded image:", "91");
+            
+            if (phone && phone.length >= 10) {
+                const text = `Hello! Thank you for visiting ICEPOPS! 🍦 Please find your invoice attached below.`;
+                window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
+            }
+        }
+    } catch (err) {
+        console.error("Error generating bill image:", err);
+        alert("Failed to generate image.");
+    } finally {
+        waBtn.innerHTML = `<i class="fa-brands fa-whatsapp text-xl"></i> Share Image to WhatsApp`;
+        waBtn.disabled = false;
+    }
 }
 
 async function voidOrder(orderId, orderNum) {
@@ -289,8 +382,8 @@ async function voidOrder(orderId, orderNum) {
         
         if (response.ok) {
             alert(data.message);
-            loadProducts();      // Refresh the product stock immediately
-            loadOrdersHistory(); // Refresh the table
+            loadProducts();      
+            loadOrdersHistory(); 
         } else {
             alert(`Error: ${data.error}`);
         }
@@ -305,7 +398,7 @@ function openPaymentModal() {
     if (cartTotalValue <= 0) return alert("Add items to cart first!");
     
     document.getElementById('modalTotalDue').innerText = `₹${cartTotalValue.toFixed(2)}`;
-    setPayMethod('cash'); // Default
+    setPayMethod('cash'); 
     
     const modal = document.getElementById('paymentModal');
     const content = document.getElementById('paymentModalContent');
@@ -331,7 +424,7 @@ function setPayMethod(method) {
     
     ['cash', 'upi', 'split'].forEach(m => {
         const btn = document.getElementById(`btn-${m}`);
-        if(btn) btn.className = `flex-1 py-2 rounded-lg font-bold text-sm transition-all ${m === method ? 'bg-white text-gray-800 shadow-sm shadow-gray-200' : 'text-gray-500 hover:text-gray-800'}`;
+        if(btn) btn.className = `flex-1 py-2.5 rounded-lg font-bold text-sm transition-all ${m === method ? 'bg-white text-gray-800 shadow-sm shadow-gray-200' : 'text-gray-500 hover:text-gray-800'}`;
     });
 
     const inputsDiv = document.getElementById('paymentInputs');
@@ -428,6 +521,8 @@ async function processCheckout() {
             body: JSON.stringify({ items: activeOrder.items, payment: paymentPayload })
         });
 
+        const data = await response.json();
+
         if (response.ok) {
             closePaymentModal();
             ordersState = ordersState.filter(o => o.id !== activeOrderId);
@@ -439,12 +534,17 @@ async function processCheckout() {
             
             renderTabs();
             renderCart();
-            loadProducts();      // Refresh grid stock
-            loadOrdersHistory(); // Update bottom history table instantly
+            loadProducts();      
             
-            setTimeout(() => alert("Payment Successful! Receipt Printed."), 300);
+            if(data.order_data) {
+                recentOrdersData.unshift(data.order_data);
+                renderOrders(recentOrdersData);
+                viewBill(data.order_number);
+            } else {
+                loadOrdersHistory();
+            }
+            
         } else {
-            const data = await response.json();
             alert(`Error: ${data.error}`);
         }
     } catch (error) {

@@ -1,56 +1,44 @@
-<section id="posView" class="h-full flex flex-col w-full relative z-10 overflow-y-auto no-scrollbar">
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(244, 114, 182, 0.5); border-radius: 20px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(244, 114, 182, 0.8); }
+</style>
+
+<!-- h-full strictly locks this container to the height of index.html's absolute wrapper -->
+<section id="posView" class="h-full flex flex-col lg:flex-row w-full z-10 overflow-hidden">
     
-    <!-- Top Half: POS System -->
-    <div class="flex flex-col flex-none min-h-[75vh]">
+    <!-- MAIN LEFT AREA -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden border-r border-pink-100">
+        
         <!-- Multi-Tab Header -->
-        <header class="bg-white/30 backdrop-blur-md border-b border-pink-100 p-3 flex gap-2 overflow-x-auto no-scrollbar shadow-sm" id="tabsContainer">
+        <header class="bg-white/30 backdrop-blur-md border-b border-pink-100 p-3 flex gap-2 overflow-x-auto custom-scrollbar shadow-sm flex-none" id="tabsContainer">
             <!-- Tabs injected by JS -->
         </header>
 
-        <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-            <!-- Products Grid Area -->
-            <div class="flex-1 flex flex-col overflow-hidden">
-                <!-- Product Search Bar -->
-                <div class="p-4 border-b border-pink-100 bg-white/20 backdrop-blur-sm">
-                    <input type="text" id="posSearch" placeholder="🔍 Search products by name or SKU..." class="w-full max-w-lg bg-white/60 border border-white/50 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm" onkeyup="filterPOSProducts()">
-                </div>
-                <!-- Grid -->
-                <div class="flex-1 p-4 md:p-6 overflow-y-auto no-scrollbar" id="posProductGrid">
+        <!-- VIEW 1: PRODUCTS GRID -->
+        <div id="posProductsSection" class="flex-1 flex flex-col h-full overflow-hidden transition-opacity duration-300">
+            <div class="p-4 pl-6 border-b border-pink-100 bg-white/20 backdrop-blur-sm flex-none">
+                <input type="text" id="posSearch" placeholder="🔍 Search products by name or SKU..." class="w-full max-w-lg bg-white/60 border border-white/50 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm" onkeyup="filterPOSProducts()">
+            </div>
+            
+            <!-- NEW ARCHITECTURE: Dedicated scrolling wrapper (Safe from JS) -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-4 pl-6 pr-4 pb-12 min-h-0 relative">
+                <!-- Inner Grid Container -->
+                <div id="posProductGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 content-start">
                     <!-- Products injected by JS -->
                 </div>
             </div>
-
-            <!-- Clean, Bright Cart Sidebar -->
-            <aside class="w-full lg:w-[400px] bg-white/30 backdrop-blur-xl border-l border-pink-100 flex flex-col shadow-2xl relative z-20">
-                <div class="p-6 flex-1 overflow-y-auto no-scrollbar">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-black text-gray-800 tracking-tight">Active Order</h2>
-                        <button onclick="clearCart()" class="text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 uppercase tracking-wider bg-red-50 px-4 py-1.5 rounded-full border border-red-100 transition-colors">Clear</button>
-                    </div>
-                    <ul id="cartItemsList" class="space-y-3"></ul>
-                </div>
-                
-                <div class="p-6 bg-white/70 backdrop-blur-2xl border-t border-pink-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-                    <div class="flex justify-between text-2xl font-black mb-6 text-gray-800">
-                        <span>Total</span>
-                        <span id="cartTotal" class="text-pink-500">₹0.00</span>
-                    </div>
-                    <button onclick="openPaymentModal()" class="w-full bg-gradient-to-r from-pink-400 to-pink-500 text-white py-4 rounded-2xl font-black text-lg hover:shadow-lg hover:shadow-pink-200 transition-all transform hover:scale-[1.02]">
-                        PROCEED TO PAY
-                    </button>
-                </div>
-            </aside>
         </div>
-    </div>
 
-    <!-- Bottom Half: Bill History & Management -->
-    <div class="flex-none bg-white/40 backdrop-blur-lg border-t-2 border-pink-200 p-6 min-h-[50vh]">
-        <div class="max-w-6xl mx-auto">
-            <h2 class="text-3xl font-black text-gray-800 tracking-tight mb-2">Bill Management</h2>
-            <p class="text-sm text-gray-600 mb-6 font-medium">View, search, or delete past bills. Deleting a bill automatically restores inventory stock.</p>
+        <!-- VIEW 2: BILLS & MANAGEMENT -->
+        <div id="posBillsSection" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-white/40 p-6 transition-opacity duration-300">
+            <div class="flex-none mb-6">
+                <h2 class="text-3xl font-black text-gray-800 tracking-tight mb-2">Bill Management</h2>
+                <p class="text-sm text-gray-600 font-medium">View, share invoices via WhatsApp, or void past bills.</p>
+            </div>
 
-            <!-- Filters -->
-            <div class="flex flex-col md:flex-row gap-4 mb-6 items-center">
+            <div class="flex-none flex flex-col md:flex-row gap-4 mb-6 items-center">
                 <div class="flex items-center gap-2 w-full md:w-auto">
                     <input type="date" id="billStart" class="bg-white/60 border border-white/50 rounded-xl px-4 py-2.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300">
                     <span class="text-gray-600 font-bold">to</span>
@@ -60,16 +48,14 @@
                 <button onclick="loadBills()" class="w-full md:w-auto bg-gray-800 hover:bg-black text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-md">Apply Filters</button>
             </div>
 
-            <!-- Bills Table -->
-            <div class="bg-white/60 rounded-3xl border border-white/50 shadow-xl overflow-hidden">
-                <div class="overflow-x-auto">
+            <div class="flex-1 overflow-hidden bg-white/60 rounded-3xl border border-white/50 shadow-xl flex flex-col">
+                <div class="flex-1 overflow-y-auto custom-scrollbar">
                     <table class="w-full text-left whitespace-nowrap">
-                        <thead class="bg-white/40">
+                        <thead class="sticky top-0 bg-white/90 backdrop-blur-md z-10 shadow-sm">
                             <tr class="text-xs uppercase tracking-widest text-gray-500 border-b border-pink-100">
                                 <th class="p-4 font-black">Order ID</th>
                                 <th class="p-4 font-black">Time</th>
                                 <th class="p-4 font-black">Items</th>
-                                <th class="p-4 font-black">Method</th>
                                 <th class="p-4 font-black">Total</th>
                                 <th class="p-4 font-black text-right">Actions</th>
                             </tr>
@@ -81,13 +67,46 @@
                 </div>
             </div>
         </div>
+
     </div>
+
+    <!-- RIGHT SIDEBAR: CART & NAVIGATION -->
+    <aside class="w-full lg:w-[400px] flex-none flex flex-col h-full bg-white/30 backdrop-blur-xl shadow-2xl relative z-20 overflow-hidden">
+        
+        <!-- View Toggle Navigation -->
+        <div class="p-4 border-b border-pink-100 flex gap-2 bg-white/40 flex-none">
+            <button onclick="togglePosView('products')" id="btnViewProducts" class="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-2.5 rounded-xl font-black text-sm shadow-md shadow-pink-200 transition-all transform hover:scale-[1.02]">
+                🛒 POS Grid
+            </button>
+            <button onclick="togglePosView('bills')" id="btnViewBills" class="flex-1 bg-white/60 text-gray-600 hover:bg-white hover:text-pink-500 py-2.5 rounded-xl font-bold text-sm border border-pink-100 transition-all">
+                📜 Management
+            </button>
+        </div>
+
+        <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-gray-800 tracking-tight">Active Order</h2>
+                <button onclick="clearCart()" class="text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 uppercase tracking-wider bg-red-50 px-4 py-1.5 rounded-full border border-red-100 transition-colors">Clear</button>
+            </div>
+            <ul id="cartItemsList" class="space-y-3 pb-4"></ul>
+        </div>
+        
+        <div class="p-6 bg-white/70 backdrop-blur-2xl border-t border-pink-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex-none">
+            <div class="flex justify-between text-2xl font-black mb-6 text-gray-800">
+                <span>Total</span>
+                <span id="cartTotal" class="text-pink-500">₹0.00</span>
+            </div>
+            <button onclick="openPaymentModal()" class="w-full bg-gradient-to-r from-pink-400 to-pink-500 text-white py-4 rounded-2xl font-black text-lg hover:shadow-lg hover:shadow-pink-200 transition-all transform hover:scale-[1.02]">
+                PROCEED TO PAY
+            </button>
+        </div>
+    </aside>
 </section>
 
 <!-- PAYMENT MODAL -->
 <div id="paymentModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <!-- Unchanged, keeping it exactly as you had it -->
     <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 border border-pink-100 shadow-2xl transform transition-all scale-95 opacity-0" id="paymentModalContent">
-        <!-- ... Same payment modal content from previous ... -->
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-black text-gray-800">Checkout</h2>
             <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-800 text-3xl font-bold">&times;</button>
@@ -105,5 +124,27 @@
         <button onclick="processCheckout()" id="confirmPayBtn" class="w-full bg-gradient-to-r from-gray-800 to-black text-white py-4 rounded-2xl font-black text-lg hover:shadow-xl transition-all">
             CONFIRM & PRINT BILL
         </button>
+    </div>
+</div>
+
+<!-- VIEW BILL / WHATSAPP MODAL -->
+<div id="viewBillModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 border border-pink-100 shadow-2xl" id="viewBillContent">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-black text-gray-800">E-Invoice</h2>
+            <button onclick="closeViewBillModal()" class="text-gray-400 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        </div>
+        <!-- This is the element html2canvas will target -->
+        <div id="billPrintArea" class="bg-white p-6 rounded-2xl border border-gray-200 mb-6 text-sm text-gray-800 font-mono shadow-sm">
+            <!-- Injected by JS -->
+        </div>
+        <div class="flex flex-col gap-3">
+            <button id="waShareBtn" class="w-full bg-[#25D366] hover:bg-green-600 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-md">
+                <i class="fa-brands fa-whatsapp text-xl"></i> Share Image to WhatsApp
+            </button>
+            <button onclick="closeViewBillModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-xl font-bold transition-colors">
+                Close
+            </button>
+        </div>
     </div>
 </div>
