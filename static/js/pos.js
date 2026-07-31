@@ -150,8 +150,7 @@ function filterPOSProducts() {
 function renderPOSProducts(dataToRender) {
     const grid = document.getElementById('posProductGrid');
     
-    // EXACT FIX: Removed grid.className override. 
-    // Just clear the innerHTML so we don't delete the Tailwind scroll classes!
+    // Just clear the innerHTML so we don't delete the Tailwind scroll classes
     grid.innerHTML = '';
 
     dataToRender.forEach(p => {
@@ -251,7 +250,7 @@ function renderOrders(data) {
     tbody.innerHTML = '';
     
     if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-gray-500 font-bold">No bills found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-gray-500 font-bold">No bills found.</td></tr>';
         return;
     }
 
@@ -263,12 +262,18 @@ function renderOrders(data) {
         let itemsSummary = order.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
         if (itemsSummary.length > 35) itemsSummary = itemsSummary.substring(0, 35) + '...';
 
+        // Extract exact amounts for split views
+        const cashAmt = order.cash_received || 0;
+        const upiAmt = order.upi_received || 0;
+
         const tr = document.createElement('tr');
         tr.className = "hover:bg-white/40 transition-colors";
         tr.innerHTML = `
             <td class="p-4 font-black text-pink-500 text-sm">${order.order_number}</td>
             <td class="p-4 text-sm font-semibold text-gray-600">${timeStr}</td>
             <td class="p-4 text-sm text-gray-500 font-medium">${itemsSummary}</td>
+            <td class="p-4 font-bold text-green-600">₹${cashAmt.toFixed(2)}</td>
+            <td class="p-4 font-bold text-blue-600">₹${upiAmt.toFixed(2)}</td>
             <td class="p-4 font-black text-gray-800">₹${order.total_amount.toFixed(2)}</td>
             <td class="p-4 flex gap-3 justify-end items-center">
                 <button onclick="viewBill('${order.order_number}')" title="View & Send WhatsApp Bill" class="w-10 h-10 rounded-full bg-white border border-blue-100 flex items-center justify-center text-blue-500 hover:text-white hover:bg-blue-500 hover:border-blue-500 transition-all shadow-sm transform hover:-translate-y-1">
@@ -288,8 +293,15 @@ function viewBill(orderNum) {
     const order = recentOrdersData.find(o => o.order_number === orderNum);
     if(!order) return;
 
+    let paymentDetails = '';
+    if (order.payment_method === 'split') {
+        paymentDetails = `SPLIT (Cash: ₹${(order.cash_received || 0).toFixed(2)} | UPI: ₹${(order.upi_received || 0).toFixed(2)})`;
+    } else {
+        paymentDetails = order.payment_method.toUpperCase();
+    }
+
     let billHtml = `
-        <div style="background: white; padding: 10px;">
+        <div style="background: white; padding: 20px;">
             <div class="text-center mb-6 border-b-2 border-gray-800 pb-4">
                 <h1 class="text-3xl font-black text-pink-500 tracking-tighter">ICEPOPS.</h1>
                 <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Order: ${order.order_number}</p>
@@ -309,7 +321,10 @@ function viewBill(orderNum) {
                 <span>TOTAL</span>
                 <span>₹${order.total_amount.toFixed(2)}</span>
             </div>
-            <div class="text-center mt-6 text-xs font-bold text-gray-400 uppercase tracking-widest">
+            <div class="text-center mt-4 text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Paid via: ${paymentDetails}
+            </div>
+            <div class="text-center mt-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
                 Thank you for visiting! 🍦
             </div>
         </div>`;
@@ -326,6 +341,7 @@ function closeViewBillModal() {
 }
 
 async function shareWhatsApp(orderNum) {
+    const order = recentOrdersData.find(o => o.order_number === orderNum);
     const billElement = document.getElementById('billPrintArea');
     const waBtn = document.getElementById('waShareBtn');
     
@@ -342,11 +358,15 @@ async function shareWhatsApp(orderNum) {
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
         const file = new File([blob], `ICEPOPS_Invoice_${orderNum}.png`, { type: 'image/png' });
 
+        let paymentText = order.payment_method === 'split' 
+            ? `SPLIT (Cash: ₹${(order.cash_received || 0).toFixed(2)} | UPI: ₹${(order.upi_received || 0).toFixed(2)})` 
+            : order.payment_method.toUpperCase();
+
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
                 files: [file],
                 title: `Invoice ${orderNum}`,
-                text: `Here is your invoice for order ${orderNum}. Thank you for visiting ICEPOPS! 🍦`
+                text: `Here is your invoice for order ${orderNum}. Paid via ${paymentText}. Thank you for visiting ICEPOPS! 🍦`
             });
         } else {
             const url = URL.createObjectURL(blob);
@@ -355,10 +375,10 @@ async function shareWhatsApp(orderNum) {
             a.download = `ICEPOPS_Invoice_${orderNum}.png`;
             a.click();
             
-            const phone = prompt("Invoice image downloaded successfully! \n\nEnter the customer's WhatsApp number (e.g., 919876543210) to open the chat, then drag-and-drop the downloaded image:", "91");
+            const phone = prompt("Invoice image downloaded! \n\nEnter customer's WhatsApp number (e.g., 919876543210) to open chat, then attach the downloaded image:", "91");
             
             if (phone && phone.length >= 10) {
-                const text = `Hello! Thank you for visiting ICEPOPS! 🍦 Please find your invoice attached below.`;
+                const text = `Hello! Thank you for visiting ICEPOPS! 🍦 Please find your invoice attached. Paid via: ${paymentText}.`;
                 window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank');
             }
         }

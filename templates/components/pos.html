@@ -1,15 +1,25 @@
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(244, 114, 182, 0.5); border-radius: 20px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(244, 114, 182, 0.8); }
+    /* Custom sleek scrollbar for the POS grids */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(244, 114, 182, 0.5); /* translucent pink */
+        border-radius: 20px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(244, 114, 182, 0.8);
+    }
 </style>
 
 <!-- h-full strictly locks this container to the height of index.html's absolute wrapper -->
-<section id="posView" class="h-full flex flex-col lg:flex-row w-full z-10 overflow-hidden">
+<section id="posView" class="h-full flex flex-col lg:flex-row w-full z-10 overflow-hidden min-h-0">
     
     <!-- MAIN LEFT AREA -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden border-r border-pink-100">
+    <div class="flex-1 flex flex-col min-w-0 min-h-0 relative border-r border-pink-100">
         
         <!-- Multi-Tab Header -->
         <header class="bg-white/30 backdrop-blur-md border-b border-pink-100 p-3 flex gap-2 overflow-x-auto custom-scrollbar shadow-sm flex-none" id="tabsContainer">
@@ -22,9 +32,9 @@
                 <input type="text" id="posSearch" placeholder="🔍 Search products by name or SKU..." class="w-full max-w-lg bg-white/60 border border-white/50 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm" onkeyup="filterPOSProducts()">
             </div>
             
-            <!-- NEW ARCHITECTURE: Dedicated scrolling wrapper (Safe from JS) -->
+            <!-- SCROLLING WRAPPER -->
             <div class="flex-1 overflow-y-auto custom-scrollbar p-4 pl-6 pr-4 pb-12 min-h-0 relative">
-                <!-- Inner Grid Container -->
+                <!-- GRID CONTAINER -->
                 <div id="posProductGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 content-start">
                     <!-- Products injected by JS -->
                 </div>
@@ -48,14 +58,17 @@
                 <button onclick="loadBills()" class="w-full md:w-auto bg-gray-800 hover:bg-black text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-md">Apply Filters</button>
             </div>
 
-            <div class="flex-1 overflow-hidden bg-white/60 rounded-3xl border border-white/50 shadow-xl flex flex-col">
-                <div class="flex-1 overflow-y-auto custom-scrollbar">
+            <div class="flex-1 overflow-hidden bg-white/60 rounded-3xl border border-white/50 shadow-xl flex flex-col min-h-0">
+                <div class="flex-1 overflow-y-auto custom-scrollbar pb-10">
                     <table class="w-full text-left whitespace-nowrap">
                         <thead class="sticky top-0 bg-white/90 backdrop-blur-md z-10 shadow-sm">
                             <tr class="text-xs uppercase tracking-widest text-gray-500 border-b border-pink-100">
                                 <th class="p-4 font-black">Order ID</th>
                                 <th class="p-4 font-black">Time</th>
                                 <th class="p-4 font-black">Items</th>
+                                <!-- NEW: Explicit Cash and UPI Columns -->
+                                <th class="p-4 font-black text-green-600">Cash</th>
+                                <th class="p-4 font-black text-blue-600">UPI</th>
                                 <th class="p-4 font-black">Total</th>
                                 <th class="p-4 font-black text-right">Actions</th>
                             </tr>
@@ -105,7 +118,6 @@
 
 <!-- PAYMENT MODAL -->
 <div id="paymentModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <!-- Unchanged, keeping it exactly as you had it -->
     <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 border border-pink-100 shadow-2xl transform transition-all scale-95 opacity-0" id="paymentModalContent">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-black text-gray-800">Checkout</h2>
@@ -134,7 +146,6 @@
             <h2 class="text-2xl font-black text-gray-800">E-Invoice</h2>
             <button onclick="closeViewBillModal()" class="text-gray-400 hover:text-gray-800 text-2xl font-bold">&times;</button>
         </div>
-        <!-- This is the element html2canvas will target -->
         <div id="billPrintArea" class="bg-white p-6 rounded-2xl border border-gray-200 mb-6 text-sm text-gray-800 font-mono shadow-sm">
             <!-- Injected by JS -->
         </div>
