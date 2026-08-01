@@ -62,6 +62,9 @@ async function loadOrdersHistory() {
     let startInput = document.getElementById('billStart')?.value;
     let endInput = document.getElementById('billEnd')?.value;
     
+    // NEW: Capture the search query string!
+    let searchQuery = document.getElementById('billSearch')?.value || '';
+    
     if (!startInput || !endInput) {
         const today = new Date().toISOString().split('T')[0];
         startInput = today;
@@ -72,7 +75,8 @@ async function loadOrdersHistory() {
     const endISO = `${endInput}T23:59:59Z`;
 
     try {
-        const res = await fetch(`/api/orders?start=${startISO}&end=${endISO}`);
+        // NEW: Pass the search query securely to the backend
+        const res = await fetch(`/api/orders?start=${startISO}&end=${endISO}&q=${encodeURIComponent(searchQuery)}`);
         if (res.ok) {
             recentOrdersData = await res.json();
             renderOrders(recentOrdersData);

@@ -5,6 +5,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setDashFilter('today');
 });
 
+// Helper function to get exact YYYY-MM-DD for local timezone
+function getLocalDateString(dateObj) {
+    const offset = dateObj.getTimezoneOffset();
+    const localDate = new Date(dateObj.getTime() - (offset * 60 * 1000));
+    return localDate.toISOString().split('T')[0];
+}
+
 // --- DATE FILTER LOGIC ---
 function setDashFilter(rangeType) {
     const today = new Date();
@@ -39,8 +46,9 @@ function setDashFilter(rangeType) {
         end = new Date(customEnd);
     }
 
-    const startStr = start.toISOString().split('T')[0] + "T00:00:00Z";
-    const endStr = end.toISOString().split('T')[0] + "T23:59:59Z";
+    // FIX: Use Local Date Strings so "Today" doesn't become "Yesterday" in UTC
+    const startStr = getLocalDateString(start) + "T00:00:00Z";
+    const endStr = getLocalDateString(end) + "T23:59:59Z";
 
     fetchDashboardData(startStr, endStr);
 }
@@ -70,7 +78,7 @@ function updateDashboardUI(data) {
     document.getElementById('dashInvItems').innerText = data.kpis.inventory.total_items;
     document.getElementById('dashInvLow').innerText = data.kpis.inventory.low_stock;
 
-    // 3. Render Charts
+    // 3. Render Charts (Passing explicit Cash/UPI data)
     renderCharts(data.charts.trend, data.kpis.payments);
 
     // 4. Render Top Items
@@ -97,24 +105,24 @@ function updateDashboardUI(data) {
         });
     }
 
-    // 5. Render Recent Orders
+    // 5. Render Recent Orders (Explicit Cash/UPI)
     const recentOrdersList = document.getElementById('dashRecentOrdersList');
     recentOrdersList.innerHTML = '';
     if (data.tables.recent_orders.length === 0) {
-        recentOrdersList.innerHTML = '<tr><td colspan="4" class="py-6 text-gray-500 text-sm font-bold text-center">No recent transactions.</td></tr>';
+        recentOrdersList.innerHTML = '<tr><td colspan="5" class="py-6 text-gray-500 text-sm font-bold text-center">No recent transactions.</td></tr>';
     } else {
         data.tables.recent_orders.forEach(order => {
             const dateStr = new Date(order.created_at.$date || order.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            let methodBadge = '';
-            if (order.payment_method === 'cash') methodBadge = '<span class="bg-green-100 border border-green-200 text-green-600 px-2 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase shadow-sm">CASH</span>';
-            else if (order.payment_method === 'upi') methodBadge = '<span class="bg-blue-100 border border-blue-200 text-blue-600 px-2 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase shadow-sm">UPI</span>';
-            else methodBadge = '<span class="bg-purple-100 border border-purple-200 text-purple-600 px-2 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase shadow-sm">SPLIT</span>';
+            
+            const cashAmt = order.cash_received || 0;
+            const upiAmt = order.upi_received || 0;
 
             recentOrdersList.innerHTML += `
                 <tr class="hover:bg-white/60 transition-colors">
                     <td class="py-3 font-black text-pink-500 text-sm">${order.order_number}</td>
                     <td class="py-3 text-sm font-bold text-gray-500">${dateStr}</td>
-                    <td class="py-3">${methodBadge}</td>
+                    <td class="py-3 font-bold text-green-600">₹${cashAmt.toFixed(2)}</td>
+                    <td class="py-3 font-bold text-blue-600">₹${upiAmt.toFixed(2)}</td>
                     <td class="py-3 text-right font-black text-gray-800">₹${order.total_amount.toFixed(2)}</td>
                 </tr>
             `;
@@ -140,7 +148,7 @@ function renderCharts(trendData, paymentsData) {
             datasets: [{
                 label: 'Revenue (₹)',
                 data: amounts,
-                borderColor: '#ec4899', // Pink
+                borderColor: '#ec4899', 
                 backgroundColor: 'rgba(236, 72, 153, 0.2)',
                 borderWidth: 3,
                 pointBackgroundColor: '#fff',
@@ -166,13 +174,14 @@ function renderCharts(trendData, paymentsData) {
     const paymentCtx = document.getElementById('paymentChart').getContext('2d');
     if (paymentChartInstance) paymentChartInstance.destroy();
 
+    // Replaced 'Method Count' with Explicit Volume (Cash vs UPI)
     paymentChartInstance = new Chart(paymentCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Cash', 'UPI', 'Split'],
+            labels: ['Total Cash', 'Total UPI'],
             datasets: [{
-                data: [paymentsData.cash, paymentsData.upi, paymentsData.split],
-                backgroundColor: ['#4ade80', '#60a5fa', '#c084fc'], // Light Green, Blue, Purple
+                data: [paymentsData.cash || 0, paymentsData.upi || 0],
+                backgroundColor: ['#4ade80', '#60a5fa'], // Green for Cash, Blue for UPI
                 borderWidth: 2,
                 borderColor: '#fff',
                 hoverOffset: 4
