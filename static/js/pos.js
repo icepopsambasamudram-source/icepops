@@ -44,6 +44,27 @@ function togglePosView(view) {
     }
 }
 
+function toggleMobileCart() {
+    const sidebar = document.getElementById('posSidebarCart');
+    const mainNav = document.getElementById('mainNavBar');
+    
+    if (sidebar.classList.contains('translate-y-full')) {
+        // Opening Cart: Slide it up and hide the bottom nav bar
+        sidebar.classList.remove('translate-y-full');
+        if (mainNav) {
+            mainNav.classList.remove('flex');
+            mainNav.classList.add('hidden', 'md:flex'); // Keep it visible on desktop
+        }
+    } else {
+        // Closing Cart (Back Button): Slide down and restore the nav bar
+        sidebar.classList.add('translate-y-full');
+        if (mainNav) {
+            mainNav.classList.remove('hidden', 'md:flex');
+            mainNav.classList.add('flex');
+        }
+    }
+}
+
 // --- API FETCHES ---
 async function loadProducts() {
     try {
@@ -61,8 +82,6 @@ async function loadProducts() {
 async function loadOrdersHistory() {
     let startInput = document.getElementById('billStart')?.value;
     let endInput = document.getElementById('billEnd')?.value;
-    
-    // NEW: Capture the search query string!
     let searchQuery = document.getElementById('billSearch')?.value || '';
     
     if (!startInput || !endInput) {
@@ -75,7 +94,6 @@ async function loadOrdersHistory() {
     const endISO = `${endInput}T23:59:59Z`;
 
     try {
-        // NEW: Pass the search query securely to the backend
         const res = await fetch(`/api/orders?start=${startISO}&end=${endISO}&q=${encodeURIComponent(searchQuery)}`);
         if (res.ok) {
             recentOrdersData = await res.json();
@@ -154,7 +172,6 @@ function filterPOSProducts() {
 function renderPOSProducts(dataToRender) {
     const grid = document.getElementById('posProductGrid');
     
-    // Just clear the innerHTML so we don't delete the Tailwind scroll classes
     grid.innerHTML = '';
 
     dataToRender.forEach(p => {
@@ -244,6 +261,13 @@ function renderCart() {
     });
 
     document.getElementById('cartTotal').innerText = `₹${cartTotalValue.toFixed(2)}`;
+
+    const totalItemsCount = activeOrder.items.reduce((sum, item) => sum + item.quantity, 0);
+    const mobCount = document.getElementById('mobileCartItemCount');
+    const mobTotal = document.getElementById('mobileCartTotal');
+    
+    if (mobCount) mobCount.innerText = `${totalItemsCount}`;
+    if (mobTotal) mobTotal.innerText = `₹${cartTotalValue.toFixed(2)}`;
 }
 
 // --- ORDER HISTORY, WHATSAPP, & VOIDING LOGIC ---
@@ -266,7 +290,6 @@ function renderOrders(data) {
         let itemsSummary = order.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
         if (itemsSummary.length > 35) itemsSummary = itemsSummary.substring(0, 35) + '...';
 
-        // Extract exact amounts for split views
         const cashAmt = order.cash_received || 0;
         const upiAmt = order.upi_received || 0;
 
@@ -549,6 +572,18 @@ async function processCheckout() {
 
         if (response.ok) {
             closePaymentModal();
+            
+            // Auto-hide mobile cart AND restore the bottom nav bar after successful payment
+            const sidebar = document.getElementById('posSidebarCart');
+            const mainNav = document.getElementById('mainNavBar');
+            if (sidebar && !sidebar.classList.contains('translate-y-full')) {
+                sidebar.classList.add('translate-y-full');
+                if (mainNav) {
+                    mainNav.classList.remove('hidden', 'md:flex');
+                    mainNav.classList.add('flex');
+                }
+            }
+
             ordersState = ordersState.filter(o => o.id !== activeOrderId);
             if(ordersState.length === 0) {
                 orderCounter++;

@@ -1,5 +1,4 @@
 <style>
-    /* Custom sleek scrollbar for the POS grids */
     .custom-scrollbar::-webkit-scrollbar {
         width: 8px;
     }
@@ -7,7 +6,7 @@
         background: transparent;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: rgba(244, 114, 182, 0.5); /* translucent pink */
+        background-color: rgba(244, 114, 182, 0.5);
         border-radius: 20px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -15,21 +14,41 @@
     }
 </style>
 
-<!-- h-full strictly locks this container to the height of index.html's absolute wrapper -->
-<section id="posView" class="h-full flex flex-col lg:flex-row w-full z-10 overflow-hidden min-h-0">
+<section id="posView" class="h-full flex flex-col lg:flex-row w-full z-10 overflow-hidden min-h-0 relative">
     
     <!-- MAIN LEFT AREA -->
+    <!-- Removed pb-20 since the floating button is gone -->
     <div class="flex-1 flex flex-col min-w-0 min-h-0 relative border-r border-pink-100">
         
-        <!-- Multi-Tab Header -->
-        <header class="bg-white/30 backdrop-blur-md border-b border-pink-100 p-3 flex gap-2 overflow-x-auto custom-scrollbar shadow-sm flex-none" id="tabsContainer">
-            <!-- Tabs injected by JS -->
+        <!-- View Toggle Navigation -->
+        <div class="p-3 md:p-4 border-b border-pink-100 flex gap-2 bg-white/40 flex-none z-10">
+            <button onclick="togglePosView('products')" id="btnViewProducts" class="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-2 rounded-xl font-black text-xs md:text-sm shadow-md shadow-pink-200 transition-all transform hover:scale-[1.02]">
+                🛒 POS Grid
+            </button>
+            <button onclick="togglePosView('bills')" id="btnViewBills" class="flex-1 bg-white/60 text-gray-600 hover:bg-white hover:text-pink-500 py-2 rounded-xl font-bold text-xs md:text-sm border border-pink-100 transition-all">
+                📜 Management
+            </button>
+        </div>
+
+        <!-- NEW: Unified Header with Tabs AND Mobile Cart Button -->
+        <header class="bg-white/30 backdrop-blur-md border-b border-pink-100 p-2 md:p-3 flex items-center justify-between gap-2 flex-none z-10">
+            <!-- Tabs container (JS injects tabs here) -->
+            <div id="tabsContainer" class="flex gap-2 overflow-x-auto custom-scrollbar flex-1 pb-1 md:pb-0">
+                <!-- Tabs injected by JS -->
+            </div>
+            
+            <!-- Mobile Cart Button (Hidden on Desktop) -->
+            <button onclick="toggleMobileCart()" class="lg:hidden flex-none bg-gray-900 text-white px-3 py-2 rounded-xl shadow-md flex items-center gap-2 hover:bg-black transition-all border border-gray-700">
+                <span class="text-lg">🛒</span>
+                <span id="mobileCartItemCount" class="font-bold text-xs">0</span>
+                <span id="mobileCartTotal" class="font-black text-pink-400 text-xs ml-1">₹0.00</span>
+            </button>
         </header>
 
         <!-- VIEW 1: PRODUCTS GRID -->
         <div id="posProductsSection" class="flex-1 flex flex-col h-full overflow-hidden transition-opacity duration-300">
             <div class="p-4 pl-6 border-b border-pink-100 bg-white/20 backdrop-blur-sm flex-none">
-                <input type="text" id="posSearch" placeholder="🔍 Search products by name or SKU..." class="w-full max-w-lg bg-white/60 border border-white/50 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm" onkeyup="filterPOSProducts()">
+                <input type="text" id="posSearch" placeholder="🔍 Search products by name or SKU..." class="w-full max-w-lg bg-white/60 border border-white/50 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm text-sm md:text-base" onkeyup="filterPOSProducts()">
             </div>
             
             <!-- SCROLLING WRAPPER -->
@@ -44,32 +63,34 @@
         <!-- VIEW 2: BILLS & MANAGEMENT -->
         <div id="posBillsSection" class="hidden flex-1 flex flex-col h-full overflow-hidden bg-white/40 p-6 transition-opacity duration-300">
             <div class="flex-none mb-6">
-                <h2 class="text-3xl font-black text-gray-800 tracking-tight mb-2">Bill Management</h2>
-                <p class="text-sm text-gray-600 font-medium">View, share invoices via WhatsApp, or void past bills.</p>
+                <h2 class="text-2xl md:text-3xl font-black text-gray-800 tracking-tight mb-2">Bill Management</h2>
+                <p class="text-xs md:text-sm text-gray-600 font-medium">View, share invoices via WhatsApp, or void past bills.</p>
             </div>
 
-            <div class="flex-none flex flex-col md:flex-row gap-4 mb-6 items-center">
-                <div class="flex items-center gap-2 w-full md:w-auto">
-                    <input type="date" id="billStart" class="bg-white/60 border border-white/50 rounded-xl px-4 py-2.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300">
-                    <span class="text-gray-600 font-bold">to</span>
-                    <input type="date" id="billEnd" class="bg-white/60 border border-white/50 rounded-xl px-4 py-2.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300">
+            <div class="flex-none flex flex-col xl:flex-row gap-4 mb-6 items-start xl:items-center">
+                <div class="flex flex-wrap md:flex-nowrap items-center gap-2 w-full xl:w-auto">
+                    <input type="date" id="billStart" class="flex-1 bg-white/60 border border-white/50 rounded-xl px-3 py-2 md:py-2.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm">
+                    <span class="text-gray-600 font-bold text-sm">to</span>
+                    <input type="date" id="billEnd" class="flex-1 bg-white/60 border border-white/50 rounded-xl px-3 py-2 md:py-2.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm">
                 </div>
-                <input type="text" id="billSearch" placeholder="Search Order ID..." class="w-full md:w-64 bg-white/60 border border-white/50 rounded-xl px-4 py-2.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300">
-<button onclick="loadOrdersHistory()" class="w-full md:w-auto bg-gray-800 hover:bg-black text-white px-6 py-2.5 rounded-xl font-bold transition-colors shadow-md">Apply Filters</button>            </div>
+                <div class="flex w-full xl:w-auto gap-2">
+                    <input type="text" id="billSearch" placeholder="Search Order ID..." class="flex-1 bg-white/60 border border-white/50 rounded-xl px-3 py-2 md:py-2.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 text-sm">
+                    <button onclick="loadOrdersHistory()" class="bg-gray-800 hover:bg-black text-white px-4 md:px-6 py-2 md:py-2.5 rounded-xl font-bold transition-colors shadow-md whitespace-nowrap text-sm">Apply</button>
+                </div>
+            </div>
 
             <div class="flex-1 overflow-hidden bg-white/60 rounded-3xl border border-white/50 shadow-xl flex flex-col min-h-0">
-                <div class="flex-1 overflow-y-auto custom-scrollbar pb-10">
+                <div class="flex-1 overflow-y-auto overflow-x-auto custom-scrollbar pb-10">
                     <table class="w-full text-left whitespace-nowrap">
                         <thead class="sticky top-0 bg-white/90 backdrop-blur-md z-10 shadow-sm">
-                            <tr class="text-xs uppercase tracking-widest text-gray-500 border-b border-pink-100">
-                                <th class="p-4 font-black">Order ID</th>
-                                <th class="p-4 font-black">Time</th>
-                                <th class="p-4 font-black">Items</th>
-                                <!-- NEW: Explicit Cash and UPI Columns -->
-                                <th class="p-4 font-black text-green-600">Cash</th>
-                                <th class="p-4 font-black text-blue-600">UPI</th>
-                                <th class="p-4 font-black">Total</th>
-                                <th class="p-4 font-black text-right">Actions</th>
+                            <tr class="text-[10px] md:text-xs uppercase tracking-widest text-gray-500 border-b border-pink-100">
+                                <th class="p-3 md:p-4 font-black">Order ID</th>
+                                <th class="p-3 md:p-4 font-black">Time</th>
+                                <th class="p-3 md:p-4 font-black">Items</th>
+                                <th class="p-3 md:p-4 font-black text-green-600">Cash</th>
+                                <th class="p-3 md:p-4 font-black text-blue-600">UPI</th>
+                                <th class="p-3 md:p-4 font-black">Total</th>
+                                <th class="p-3 md:p-4 font-black text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="billsTableBody" class="divide-y divide-pink-50/50">
@@ -82,29 +103,35 @@
 
     </div>
 
-    <!-- RIGHT SIDEBAR: CART & NAVIGATION -->
-    <aside class="w-full lg:w-[400px] flex-none flex flex-col h-full bg-white/30 backdrop-blur-xl shadow-2xl relative z-20 overflow-hidden">
+<!-- RIGHT SIDEBAR / MOBILE MODAL: CART & NAVIGATION -->
+    <aside id="posSidebarCart" class="fixed inset-0 z-[60] bg-white/95 backdrop-blur-2xl flex flex-col transform translate-y-full transition-transform duration-300 lg:static lg:translate-y-0 lg:w-[400px] lg:flex-none lg:h-full lg:bg-white/30 lg:shadow-2xl lg:z-20">
         
-        <!-- View Toggle Navigation -->
-        <div class="p-4 border-b border-pink-100 flex gap-2 bg-white/40 flex-none">
-            <button onclick="togglePosView('products')" id="btnViewProducts" class="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-2.5 rounded-xl font-black text-sm shadow-md shadow-pink-200 transition-all transform hover:scale-[1.02]">
-                🛒 POS Grid
+        <!-- FIXED CART HEADER (Safe from scrolling!) -->
+        <div class="p-4 md:p-6 border-b border-pink-100 flex justify-between items-center bg-white shadow-sm flex-none z-10 pt-safe">
+            
+            <!-- Mobile Back Button -->
+            <button onclick="toggleMobileCart()" class="lg:hidden text-gray-600 hover:text-gray-900 font-black flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full border border-gray-200 transition-all active:scale-95 text-xs uppercase tracking-wider shadow-sm">
+                <i class="fa-solid fa-arrow-left"></i> Back
             </button>
-            <button onclick="togglePosView('bills')" id="btnViewBills" class="flex-1 bg-white/60 text-gray-600 hover:bg-white hover:text-pink-500 py-2.5 rounded-xl font-bold text-sm border border-pink-100 transition-all">
-                📜 Management
+            
+            <!-- Desktop Title (Hidden on Mobile) -->
+            <h2 class="text-2xl font-black text-gray-800 tracking-tight hidden lg:block">Active Order</h2>
+            
+            <!-- Clear Cart Button -->
+            <button onclick="clearCart()" class="text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 uppercase tracking-wider bg-red-50 px-4 py-2 rounded-full border border-red-100 transition-colors shadow-sm ml-auto lg:ml-0">
+                Clear Cart
             </button>
+            
         </div>
 
-        <div class="p-6 flex-1 overflow-y-auto custom-scrollbar">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-black text-gray-800 tracking-tight">Active Order</h2>
-                <button onclick="clearCart()" class="text-xs font-bold text-red-500 hover:text-white hover:bg-red-500 uppercase tracking-wider bg-red-50 px-4 py-1.5 rounded-full border border-red-100 transition-colors">Clear</button>
-            </div>
+        <!-- SCROLLABLE CART ITEMS LIST -->
+        <div class="p-4 md:p-6 flex-1 overflow-y-auto custom-scrollbar">
             <ul id="cartItemsList" class="space-y-3 pb-4"></ul>
         </div>
         
-        <div class="p-6 bg-white/70 backdrop-blur-2xl border-t border-pink-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex-none">
-            <div class="flex justify-between text-2xl font-black mb-6 text-gray-800">
+        <!-- Proceed to Pay Area -->
+        <div class="p-4 md:p-6 bg-white border-t border-pink-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] flex-none lg:bg-white/70 lg:backdrop-blur-2xl">
+            <div class="flex justify-between text-2xl font-black mb-4 md:mb-6 text-gray-800">
                 <span>Total</span>
                 <span id="cartTotal" class="text-pink-500">₹0.00</span>
             </div>
@@ -116,7 +143,7 @@
 </section>
 
 <!-- PAYMENT MODAL -->
-<div id="paymentModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+<div id="paymentModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 border border-pink-100 shadow-2xl transform transition-all scale-95 opacity-0" id="paymentModalContent">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-3xl font-black text-gray-800">Checkout</h2>
@@ -139,7 +166,7 @@
 </div>
 
 <!-- VIEW BILL / WHATSAPP MODAL -->
-<div id="viewBillModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+<div id="viewBillModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
     <div class="bg-white w-full max-w-sm rounded-[2rem] p-8 border border-pink-100 shadow-2xl" id="viewBillContent">
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-black text-gray-800">E-Invoice</h2>

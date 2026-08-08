@@ -1,72 +1,71 @@
 <!-- Toast Notification Container -->
 <div id="toastContainer" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none"></div>
 
-<section id="inventoryView" class="h-full flex flex-col w-full relative z-10 p-4 md:p-6 overflow-y-auto no-scrollbar">
+<section id="inventoryView" class="h-full flex flex-col w-full relative z-10 p-4 md:p-6 overflow-y-auto custom-scrollbar">
     
     <!-- Dashboard Stats Header -->
-    <header class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6">
-        <div class="bg-white/40 backdrop-blur-xl p-6 rounded-[2rem] border border-pink-100 shadow-xl flex items-center justify-between">
+    <header class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 mb-4 md:mb-6">
+        <div class="bg-white/40 backdrop-blur-xl p-4 md:p-6 rounded-[2rem] border border-pink-100 shadow-xl flex items-center justify-between">
             <div>
-                <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Total Inventory Value</p>
-                <h3 class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mt-1" id="invTotalValue">₹0.00</h3>
+                <p class="text-[9px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Total Value</p>
+                <h3 class="text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-600 mt-1" id="invTotalValue">₹0.00</h3>
             </div>
-            <div class="text-4xl opacity-80">💰</div>
+            <div class="text-3xl md:text-4xl opacity-80">💰</div>
         </div>
-        <div class="bg-white/40 backdrop-blur-xl p-6 rounded-[2rem] border border-pink-100 shadow-xl flex items-center justify-between">
+        <div class="bg-white/40 backdrop-blur-xl p-4 md:p-6 rounded-[2rem] border border-pink-100 shadow-xl flex items-center justify-between">
             <div>
-                <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Total Products</p>
-                <h3 class="text-3xl font-black text-gray-800 mt-1" id="invTotalItems">0</h3>
+                <p class="text-[9px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Products</p>
+                <h3 class="text-2xl md:text-3xl font-black text-gray-800 mt-1" id="invTotalItems">0</h3>
             </div>
-            <div class="text-4xl opacity-80">📦</div>
+            <div class="text-3xl md:text-4xl opacity-80">📦</div>
         </div>
-        <div class="bg-white/40 backdrop-blur-xl p-6 rounded-[2rem] border border-pink-100 shadow-xl flex items-center justify-between border-l-4 border-l-red-400">
+        <div class="bg-white/40 backdrop-blur-xl p-4 md:p-6 rounded-[2rem] border border-pink-100 shadow-xl flex items-center justify-between border-l-4 border-l-red-400">
             <div>
-                <p class="text-xs font-bold uppercase tracking-widest text-gray-500">Low Stock Alerts</p>
-                <h3 class="text-3xl font-black text-red-500 mt-1" id="invLowStock">0</h3>
+                <p class="text-[9px] md:text-xs font-bold uppercase tracking-widest text-gray-500">Low Stock</p>
+                <h3 class="text-2xl md:text-3xl font-black text-red-500 mt-1" id="invLowStock">0</h3>
             </div>
-            <div class="text-4xl opacity-80">⚠️</div>
+            <div class="text-3xl md:text-4xl opacity-80">⚠️</div>
         </div>
     </header>
 
     <!-- Toolbar: Search, Filter, Sort, Add Action -->
-    <div class="bg-white/40 backdrop-blur-xl p-4 rounded-3xl border border-pink-100 shadow-lg mb-6 flex flex-col xl:flex-row gap-4 items-center justify-between">
-        <div class="flex-1 flex flex-col md:flex-row gap-4 w-full">
-            <input type="text" id="invSearch" placeholder="🔍 Search by SKU or Name..." class="w-full md:w-80 bg-white/60 border border-white/50 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm" onkeyup="filterInventory()">
+    <div class="bg-white/40 backdrop-blur-xl p-4 md:p-5 rounded-[2rem] border border-pink-100 shadow-lg mb-4 md:mb-6 flex flex-col xl:flex-row gap-4 items-center justify-between">
+        <div class="flex-1 flex flex-col md:flex-row gap-3 w-full">
+            <input type="text" id="invSearch" placeholder="🔍 Search SKU or Name..." class="w-full md:w-64 lg:w-80 bg-white/60 border border-white/50 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm text-sm" onkeyup="filterInventory()">
             
-            <select id="invCategoryFilter" class="w-full md:w-48 bg-white/60 border border-white/50 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm cursor-pointer" onchange="filterInventory()">
+            <select id="invCategoryFilter" class="w-full md:w-48 bg-white/60 border border-white/50 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm cursor-pointer text-sm" onchange="filterInventory()">
                 <option value="all">All Categories</option>
                 <!-- Injected dynamically -->
             </select>
 
-            <!-- NEW: Sorting Dropdown -->
-            <select id="invSortFilter" class="w-full md:w-56 bg-white/60 border border-white/50 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm cursor-pointer" onchange="filterInventory()">
+            <select id="invSortFilter" class="w-full md:w-48 bg-white/60 border border-white/50 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all shadow-sm cursor-pointer text-sm" onchange="filterInventory()">
                 <option value="default">Sort by Added</option>
                 <option value="price_asc">Price: Low to High</option>
                 <option value="price_desc">Price: High to Low</option>
             </select>
             
-            <!-- NEW: Clear Filter Button (Visible only when clicking side panel alert) -->
-            <button id="clearAlertFilterBtn" onclick="clearLowStockFilter()" class="hidden bg-red-100 text-red-600 px-4 py-3 rounded-2xl font-bold hover:bg-red-200 transition-colors shadow-sm text-sm flex items-center gap-2">
-                Clear Alerts Filter ✖
+            <button id="clearAlertFilterBtn" onclick="clearLowStockFilter()" class="hidden w-full md:w-auto bg-red-100 text-red-600 px-4 py-2.5 md:py-3 rounded-xl md:rounded-2xl font-bold hover:bg-red-200 transition-colors shadow-sm text-xs md:text-sm flex items-center justify-center gap-2">
+                Clear Alerts ✖
             </button>
         </div>
-        <button onclick="openInvModal()" class="w-full md:w-auto bg-gradient-to-r from-pink-400 to-pink-500 text-white px-8 py-3 rounded-2xl font-bold hover:shadow-lg hover:shadow-pink-200 transition-all transform hover:scale-[1.02]">
+        <button onclick="openInvModal()" class="w-full xl:w-auto bg-gradient-to-r from-pink-400 to-pink-500 text-white px-6 md:px-8 py-3 rounded-xl md:rounded-2xl font-bold hover:shadow-lg hover:shadow-pink-200 transition-all transform hover:scale-[1.02] text-sm md:text-base">
             + Add New Stock
         </button>
     </div>
 
     <!-- Inventory Table -->
-    <div class="flex-1 overflow-hidden bg-white/60 backdrop-blur-xl rounded-3xl border border-pink-100 shadow-xl flex flex-col relative">
-        <div class="overflow-y-auto flex-1 p-0 no-scrollbar">
+    <div class="flex-1 overflow-hidden bg-white/60 backdrop-blur-xl rounded-[2rem] border border-pink-100 shadow-xl flex flex-col relative min-h-0">
+        <!-- ADDED overflow-x-auto for horizontal swipe on mobile -->
+        <div class="overflow-y-auto overflow-x-auto custom-scrollbar flex-1 pb-10">
             <table class="w-full text-left border-collapse whitespace-nowrap">
-                <thead class="sticky top-0 bg-white/80 backdrop-blur-md shadow-sm z-10">
-                    <tr class="text-xs uppercase tracking-widest text-gray-500 border-b border-pink-100">
-                        <th class="p-5 font-black">SKU</th>
-                        <th class="p-5 font-black">Product Info</th>
-                        <th class="p-5 font-black">Price/Unit</th>
-                        <th class="p-5 font-black">Stock Status</th>
-                        <th class="p-5 font-black">Box config</th>
-                        <th class="p-5 font-black text-right">Actions</th>
+                <thead class="sticky top-0 bg-white/90 backdrop-blur-md shadow-sm z-10">
+                    <tr class="text-[10px] md:text-xs uppercase tracking-widest text-gray-500 border-b border-pink-100">
+                        <th class="p-4 md:p-5 font-black">SKU</th>
+                        <th class="p-4 md:p-5 font-black">Product Info</th>
+                        <th class="p-4 md:p-5 font-black">Price/Unit</th>
+                        <th class="p-4 md:p-5 font-black">Stock Status</th>
+                        <th class="p-4 md:p-5 font-black">Box config</th>
+                        <th class="p-4 md:p-5 font-black text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="inventoryTableBody" class="divide-y divide-pink-50/50">
@@ -79,71 +78,72 @@
 
 <!-- Add/Edit Product Modal -->
 <div id="invModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-2xl rounded-[2.5rem] p-8 border border-pink-100 shadow-2xl transform transition-all scale-95 opacity-0 overflow-y-auto max-h-[90vh] no-scrollbar" id="invModalContent">
-        <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-            <h2 class="text-2xl font-black text-gray-800" id="invModalTitle">Add New Product</h2>
+    <!-- Adjusted padding and max-h for mobile visibility -->
+    <div class="bg-white w-full max-w-2xl rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-pink-100 shadow-2xl transform transition-all scale-95 opacity-0 overflow-y-auto max-h-[90vh] custom-scrollbar" id="invModalContent">
+        <div class="flex justify-between items-center mb-4 md:mb-6 border-b border-gray-100 pb-3 md:pb-4">
+            <h2 class="text-xl md:text-2xl font-black text-gray-800" id="invModalTitle">Add New Product</h2>
             <button onclick="closeInvModal()" class="text-gray-400 hover:text-gray-800 text-3xl font-bold transition-colors">&times;</button>
         </div>
 
-        <form id="invForm" class="space-y-6">
+        <form id="invForm" class="space-y-4 md:space-y-6">
             <input type="hidden" id="invProductId">
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">SKU / Barcode</label>
-                    <input type="text" id="invSku" required class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all" placeholder="e.g. POP-001">
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 md:mb-2">SKU / Barcode</label>
+                    <input type="text" id="invSku" required class="w-full bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all text-sm md:text-base" placeholder="e.g. POP-001">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Product Name</label>
-                    <input type="text" id="invName" required class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all" placeholder="e.g. Mango Pop">
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 md:mb-2">Product Name</label>
+                    <input type="text" id="invName" required class="w-full bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all text-sm md:text-base" placeholder="e.g. Mango Pop">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Category</label>
-                    <input type="text" id="invCategory" required list="categoryList" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all" placeholder="e.g. Ice Pops">
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 md:mb-2">Category</label>
+                    <input type="text" id="invCategory" required list="categoryList" class="w-full bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all text-sm md:text-base" placeholder="e.g. Ice Pops">
                     <datalist id="categoryList"></datalist>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Price Per Unit (₹)</label>
-                    <input type="number" id="invPrice" step="0.01" required min="0" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3.5 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all" placeholder="0.00">
+                    <label class="block text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 md:mb-2">Price Per Unit (₹)</label>
+                    <input type="number" id="invPrice" step="0.01" required min="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all text-sm md:text-base" placeholder="0.00">
                 </div>
             </div>
 
-            <div class="bg-gray-50 p-6 rounded-3xl border border-gray-100 relative">
+            <div class="bg-gray-50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 relative">
                 <!-- READ-ONLY CURRENT STOCK (Hidden during creation) -->
-                <div id="invCurrentStockDisplay" class="hidden mb-6 bg-white p-4 rounded-xl border border-blue-100 flex items-center justify-between">
+                <div id="invCurrentStockDisplay" class="hidden mb-4 md:mb-6 bg-white p-3 md:p-4 rounded-xl border border-blue-100 flex items-center justify-between shadow-sm">
                     <div>
-                        <p class="text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">Current Stock in System</p>
-                        <p class="text-xl font-black text-gray-800" id="invCurrentStockText">--</p>
+                        <p class="text-[9px] md:text-[10px] font-bold text-blue-500 uppercase tracking-widest mb-1">Current Stock in System</p>
+                        <p class="text-base md:text-xl font-black text-gray-800" id="invCurrentStockText">--</p>
                     </div>
-                    <div class="text-3xl">📦</div>
+                    <div class="text-2xl md:text-3xl">📦</div>
                 </div>
 
-                <h4 class="text-sm font-bold text-pink-500 uppercase tracking-widest mb-4" id="invConfigTitle">Initial Stock Setup</h4>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <h4 class="text-xs md:text-sm font-bold text-pink-500 uppercase tracking-widest mb-3 md:mb-4" id="invConfigTitle">Initial Stock Setup</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Units per Box</label>
-                        <input type="number" id="invUnitsPerBox" required min="1" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all" value="1">
+                        <label class="block text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Units per Box</label>
+                        <input type="number" id="invUnitsPerBox" required min="1" class="w-full bg-white border border-gray-200 rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all text-sm" value="1">
                     </div>
                     <div>
-                        <label id="lblBoxes" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Initial Boxes</label>
-                        <input type="number" id="invBoxes" required min="0" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all" value="0">
+                        <label id="lblBoxes" class="block text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Initial Boxes</label>
+                        <input type="number" id="invBoxes" required min="0" class="w-full bg-white border border-gray-200 rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all text-sm" value="0">
                     </div>
                     <div>
-                        <label id="lblLoose" class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Initial Loose Units</label>
-                        <input type="number" id="invLoose" required min="0" class="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all" value="0">
+                        <label id="lblLoose" class="block text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Initial Loose Units</label>
+                        <input type="number" id="invLoose" required min="0" class="w-full bg-white border border-gray-200 rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 transition-all text-sm" value="0">
                     </div>
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Low Stock Alert Threshold (In Total Units)</label>
-                <input type="number" id="invThreshold" required min="0" class="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all" value="10">
-                <p class="text-xs text-gray-400 font-medium mt-2">The system will alert you when absolute stock falls below this unit count.</p>
+                <label class="block text-[10px] md:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 md:mb-2">Low Stock Alert Threshold (Total Units)</label>
+                <input type="number" id="invThreshold" required min="0" class="w-full bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl px-4 md:px-5 py-2.5 md:py-3 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-pink-300 focus:bg-white transition-all text-sm md:text-base" value="10">
+                <p class="text-[9px] md:text-[10px] text-gray-400 font-medium mt-1 md:mt-2">Alert triggers when absolute stock falls below this count.</p>
             </div>
 
-            <div class="flex gap-4 pt-4 border-t border-gray-100">
-                <button type="button" onclick="closeInvModal()" class="flex-1 bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold hover:bg-gray-200 transition-colors">Cancel</button>
-                <button type="submit" id="invSubmitBtn" class="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-4 rounded-2xl font-black hover:shadow-lg hover:shadow-pink-200 transition-all">SAVE PRODUCT</button>
+            <div class="flex gap-3 md:gap-4 pt-4 border-t border-gray-100">
+                <button type="button" onclick="closeInvModal()" class="flex-1 bg-gray-100 text-gray-600 py-3 md:py-4 rounded-xl md:rounded-2xl font-bold hover:bg-gray-200 transition-colors text-sm md:text-base">Cancel</button>
+                <button type="submit" id="invSubmitBtn" class="flex-1 bg-gradient-to-r from-pink-400 to-pink-500 text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-black hover:shadow-lg hover:shadow-pink-200 transition-all text-sm md:text-base">SAVE PRODUCT</button>
             </div>
         </form>
     </div>
