@@ -30,8 +30,23 @@ def get_dashboard_stats():
                 "_id": None,
                 "total_revenue": {"$sum": "$total_amount"},
                 "total_orders": {"$sum": 1},
-                "cash_total": {"$sum": {"$cond": [{"$eq": ["$payment_method", "cash"]}, "$total_amount", 0]}},
-                "upi_total": {"$sum": {"$cond": [{"$eq": ["$payment_method", "upi"]}, "$total_amount", 0]}},
+                
+                # FIXED: Distribute Split Payments perfectly into Cash and UPI accurately
+                "cash_total": {"$sum": {
+                    "$cond": [
+                        {"$eq": ["$payment_method", "split"]},
+                        {"$ifNull": ["$cash_received", 0]}, # Pull exact cash portion from split
+                        {"$cond": [{"$eq": ["$payment_method", "cash"]}, "$total_amount", 0]}
+                    ]
+                }},
+                "upi_total": {"$sum": {
+                    "$cond": [
+                        {"$eq": ["$payment_method", "split"]},
+                        {"$ifNull": ["$upi_received", 0]},  # Pull exact UPI portion from split
+                        {"$cond": [{"$eq": ["$payment_method", "upi"]}, "$total_amount", 0]}
+                    ]
+                }},
+                
                 "split_total": {"$sum": {"$cond": [{"$eq": ["$payment_method", "split"]}, "$total_amount", 0]}}
             }}
         ]
@@ -76,7 +91,8 @@ def get_dashboard_stats():
         
         for p in all_products:
             t_units = (p.get('boxes_in_stock', 0) * p.get('units_per_box', 1)) + p.get('loose_units_in_stock', 0)
-            thresh = p.get('low_stock_box_threshold', 1) * p.get('units_per_box', 1)
+            # Utilizing the new unit-based threshold calculation from previous updates
+            thresh = p.get('low_stock_unit_threshold', p.get('low_stock_box_threshold', 1) * p.get('units_per_box', 1))
             
             total_inv_items += t_units
             total_inv_value += (t_units * p.get('price_per_unit', 0))
